@@ -1,0 +1,9 @@
+telebot
+futures==3.0.5
+flask==0.12
+flask-script
+freezegun==0.3.8
+requests==2.13.0
+pytelegrambotapi
+sqlalchemy
+pymysql

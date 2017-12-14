@@ -1,0 +1,44 @@
+[
+  {
+    "constant": true,
+    "inputs": [{ "name": "pollName", "type": "string" }],
+    "name": "getPollByName",
+    "outputs": [{ "name": "", "type": "address" }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [{ "name": "pollName", "type": "string" }],
+    "name": "createPoll",
+    "outputs": [{ "name": "", "type": "bool" }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "owner",
+    "outputs": [{ "name": "", "type": "address" }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": false, "name": "", "type": "string" },
+      { "indexed": false, "name": "", "type": "address" }
+    ],
+    "name": "PollCreated",
+    "type": "event"
+  }
+]

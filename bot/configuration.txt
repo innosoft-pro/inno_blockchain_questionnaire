@@ -1,0 +1,4 @@
+contractPollingCenter=0x51f1cfBbB4EA57966dC02bE96D3Cb7A6D2b671a9
+contractCryptoRF=0x405be7fEed8E8EcBE996FeD76Cb6bF74Ed90bb31
+main_account=0x00258584ffc280EE6194d92D635D8015679b58e7
+main_password=ufainnosoft

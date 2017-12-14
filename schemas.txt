@@ -1,0 +1,30 @@
+polls collection structure:
+{
+	'archived': bool,
+	'participants': [], if empty - open
+	'name' : string
+	'questions': 
+	[
+	{
+		'text': string
+		'type': 'open' / 'select' / 'multiselect'
+		'options' : null / [..., ..., ...]
+	}
+	]
+}
+
+answers collection structure:
+{
+	poll_id: string,
+	participant_telegram_id: string,
+	answers: [
+		{
+		'question_text': string
+		'type': 'open' / 'select' / 'multiselect'
+		'answer' : string
+		'likes': num,
+		'dislikes' : num
+		}
+	]
+}
+

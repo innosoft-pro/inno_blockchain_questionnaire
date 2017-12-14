@@ -1,0 +1,19 @@
+version: '2'
+
+services:
+  calc_service:
+    image: bchquiz_system:latest
+    container_name: bchquiz_system
+    command: gunicorn -b 0.0.0.0:5000 --capture-output --error-logfile - --access-logfile - --workers 1 initialization:app
+    ports:
+      - "5000:5000"
+    links:
+      - mongo
+
+  mongo:
+    image: mongo:latest
+    container_name: bchquiz_mongo
+
+volumes:
+  metro_io:
+

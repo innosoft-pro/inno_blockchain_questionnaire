@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+    "full": {
+      "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    }
+  },
+  "handlers": {
+    "console": {
+      "class": "logging.StreamHandler",
+      "level": "DEBUG",
+      "formatter": "full",
+      "stream": "ext://sys.stdout"
+    },
+    "mainFileHandler": {
+      "level": "INFO",
+      "class": "logging.handlers.RotatingFileHandler",
+      "formatter": "full",
+      "filename": "app/logs/mmcc_calc.log",
+      "maxBytes": 10485760,
+      "backupCount": 20,
+      "encoding": "utf-8"
+    }
+  },
+  "loggers": {
+    "": {
+      "level": "INFO",
+      "handlers": [
+        "console",
+        "mainFileHandler"
+      ],
+      "propagate": true
+    },
+    "gunicorn.access": {
+      "level": "DEBUG",
+      "handlers": [
+        "console",
+        "mainFileHandler"
+      ],
+      "propagate": true
+    },
+    "gunicorn.error": {
+      "level": "ERROR",
+      "handlers": [
+        "console",
+        "mainFileHandler"
+      ],
+      "propagate": true
+    }
+  }
+}
