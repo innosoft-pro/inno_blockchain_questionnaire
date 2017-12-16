@@ -1,11 +1,11 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
-import AppLayout from "./containers/AppLayout/AppLayout";
 import registerServiceWorker from "./registerServiceWorker";
 import { BrowserRouter as Router, Route, Redirect } from "react-router-dom";
-import IndexPage from "./containers/IndexPage/IndexPage";
-import LoginPage from "./containers/LoginPage/LoginPage";
 import 'b:Page';
+import AppLayout from "b:AppLayout";
+import IndexPage from "b:IndexPage";
+import LoginPage from "b:LoginPage";
 
 const PrivateRoute = ({ component: Component, ...rest }) => (
   <Route

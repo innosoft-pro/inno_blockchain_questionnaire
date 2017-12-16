@@ -1,14 +1,13 @@
-import './LoginPage.css';
-import React, {Component} from 'react';
-import LoginForm from '../../components/LoginForm/LoginForm';
+import React from 'react';
+import LoginForm from 'b:LoginForm';
+import { decl } from 'bem-react-core';
 
-export default class LoginPage extends Component {
-    render() {
-        return (
-            <div className="LoginPage">
-                <h1>Login</h1>
-                <LoginForm />
-            </div>
-        );
+export default decl({
+    block : 'LoginPage',
+    content() {
+        return [
+            <h1 key="h">Login</h1>,
+            <LoginForm key="f"/>
+        ];
     }
-} 
+});

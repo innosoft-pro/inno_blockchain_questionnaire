@@ -1,23 +1,21 @@
-import React, {Component} from 'react';
+import React from 'react';
 import './AppLayout.css';
 import {Layout} from 'antd';
+import {decl} from 'bem-react-core';
+const {Header, Footer, Content} = Layout;
 
-const {Header, Footer, Sider, Content} = Layout;
+export default decl({
+  block: 'AppLayout',
 
-class AppLayout extends Component {
-  render() {
+  content() {
     return (
-      <div className="App">
-        <Layout className="Layout">
-          <Header>Header</Header>
-          <Content className="Content">
-            {this.props.children}
-          </Content>
-          <Footer className="Footer">Footer</Footer>
-        </Layout>
-      </div>
+      <Layout className="Layout">
+        <Header>Header</Header>
+        <Content className="Content">
+          {this.props.children}
+        </Content>
+        <Footer className="Footer">Footer</Footer>
+      </Layout>
     );
   }
-}
-
-export default AppLayout;
+});

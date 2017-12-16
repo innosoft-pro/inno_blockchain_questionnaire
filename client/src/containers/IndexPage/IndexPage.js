@@ -1,13 +1,11 @@
-import './IndexPage.css';
-import React, {Component} from 'react';
-import IndexHello from '../../components/IndexHello/IndexHello';
+import React from 'react';
+import { decl } from 'bem-react-core';
 
-export default class IndexPage extends Component {
-    render() {
+export default decl({
+    block : 'IndexPage',
+    content() {
         return (
-            <div className="IndexPage">
-                <IndexHello />
-            </div>
+            <h1>Index</h1>
         );
     }
-} 
+});

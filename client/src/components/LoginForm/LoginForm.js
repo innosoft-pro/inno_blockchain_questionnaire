@@ -1,15 +1,17 @@
-import React, {Component} from 'react';
-import {Form, Icon, Input, Button, Checkbox} from 'antd';
+import React from 'react';
+import {Form, Icon, Input, Button} from 'antd';
+import { decl } from 'bem-react-core';
+
 const FormItem = Form.Item;
 
-function hasErrors(fieldsError) {
-    return Object
-        .keys(fieldsError)
-        .some(field => fieldsError[field]);
-}
+export default decl({
+    block : 'LoginForm',
 
-class LoginForm extends Component {
-    handleSubmit = (e) => {
+    willInit() {
+        this.handleSubmit = this.handleSubmit.bind(this);
+    },
+
+    handleSubmit(e) {
         e.preventDefault();
         this
             .props
@@ -19,14 +21,11 @@ class LoginForm extends Component {
                     console.log('Received values of form: ', values);
                 }
             });
-    }
+    },
 
-    render() {
-        const {getFieldDecorator, getFieldsError, getFieldError, isFieldTouched} = this.props.form;
+    content() {
+        const {getFieldDecorator} = this.props.form;
 
-        // Only show error after a field is touched.
-        const userNameError = isFieldTouched('userName') && getFieldError('userName');
-        const passwordError = isFieldTouched('password') && getFieldError('password');
         return (
             <Form onSubmit={this.handleSubmit} className="login-form">
                 <FormItem>
@@ -64,6 +63,6 @@ class LoginForm extends Component {
             </Form>
         );
     }
-}
-
-export default Form.create()(LoginForm);
+}, (me) => {
+    return Form.create()(me);
+});
