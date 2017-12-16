@@ -103,3 +103,6 @@ ENV/
 #macOS, idea
 .DS_Store
 .idea
+
+#http rest client files
+http-body.json
