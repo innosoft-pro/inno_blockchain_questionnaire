@@ -106,7 +106,3 @@ ENV/
 
 # http rest client files
 http-body.json
-
-# javascript
-node_modules/
-npm-debug.log
