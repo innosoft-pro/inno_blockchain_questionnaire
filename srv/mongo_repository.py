@@ -49,6 +49,7 @@ class MongoRepository:
         :param item: dict - existing mongo document (with valid '_id')
         :return: dict - updated item
         """
+        item['_id'] = ObjectId(item['_id'])
         result = self._collection.update_one(
             {'_id': item['_id']},
             {'$set': item}
