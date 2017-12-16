@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import logo from './logo.svg';
 import './App.css';
 import {Layout} from 'antd';
-import LoginPage from './containers/LoginPage/LoginPage';
+import IndexPage from './containers/IndexPage/IndexPage';
 
 const {Header, Footer, Sider, Content} = Layout;
 
@@ -12,7 +12,9 @@ class App extends Component {
       <div className="App">
         <Layout className="Layout">
           <Header>Header</Header>
-          <Content className="Content"><LoginPage/></Content>
+          <Content className="Content">
+            <IndexPage/>
+          </Content>
           <Footer className="Footer">Footer</Footer>
         </Layout>
       </div>
