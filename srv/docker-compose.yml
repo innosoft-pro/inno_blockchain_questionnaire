@@ -13,7 +13,3 @@ services:
   mongo:
     image: mongo:latest
     container_name: bchquiz_mongo
-
-volumes:
-  metro_io:
-

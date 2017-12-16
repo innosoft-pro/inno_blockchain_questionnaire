@@ -100,9 +100,13 @@ ENV/
 # mypy
 .mypy_cache/
 
-#macOS, idea
+# macOS, idea
 .DS_Store
 .idea
 
-#http rest client files
+# http rest client files
 http-body.json
+
+# javascript
+node_modules/
+npm-debug.log
