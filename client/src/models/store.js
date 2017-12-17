@@ -26,5 +26,9 @@ export const Store = types.model("Store", {
 }).actions(self => ({
     login(user) {
         self.user = user;
+    },
+    getById(id) {
+        const poll = self.polls.find( poll => poll._id == id);
+        return poll || Poll.create({name: '', archived: false, participants: [], questions: []});
     }
 }))

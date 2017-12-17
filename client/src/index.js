@@ -22,7 +22,7 @@ const store = Store.create(
     polls: [
       {
         _id: "first",
-        name: "Test poll",
+        name: "Test poll tttoeuhhh oetetetetet ttetetetococ tototoc c",
         archived: false,
         participants: [],
         questions: []
