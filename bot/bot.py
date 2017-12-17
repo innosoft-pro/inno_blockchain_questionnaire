@@ -8,7 +8,7 @@ from sqlalchemy import desc
 from datetime import datetime
 from dbms.db_model import session, SessionModel, ProcessModel, UsersSurveysModel
 from collections import OrderedDict
-from contractHandler import ContractHandler
+#from contractHandler import ContractHandler
 
 bot = telebot.TeleBot(config.token)
 

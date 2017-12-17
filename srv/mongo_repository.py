@@ -10,8 +10,6 @@ class MongoRepository:
     """
     class for working with mongo_collections. Usage: create it in your class as a field with
     collection name in constructor and use its public methods.
-    Attention: creates index by status field, possibly this need to be refactored because some collections might
-    not have it
     """
 
     def __init__(self, collection_name):

@@ -7,3 +7,4 @@ requests==2.13.0
 pytelegrambotapi
 sqlalchemy
 pymysql
+python-telegram-bot
