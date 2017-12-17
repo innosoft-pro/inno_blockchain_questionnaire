@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import registerServiceWorker from "./registerServiceWorker";
-import { BrowserRouter as Router, Route, Redirect } from "react-router-dom";
+import { Router, Route, Redirect } from "react-router-dom";
 import { observer, inject } from "mobx-react";
 import { Store } from "./models/store";
 import { Provider } from "mobx-react";
@@ -10,16 +10,41 @@ import AppLayout from "b:AppLayout";
 import IndexPage from "b:IndexPage";
 import LoginPage from "b:LoginPage";
 import Switch from "react-router-dom/Switch";
+import { RouterStore, syncHistoryWithStore } from "mobx-react-router";
+import createBrowserHistory from "history/createBrowserHistory";
 
+const browserHistory = createBrowserHistory();
+const routingStore = new RouterStore();
+window.routing = routingStore;
 const fetcher = url => window.fetch(url).then(response => response.json());
 const store = Store.create(
-  {},
+  {
+    polls: [
+      {
+        _id: "first",
+        name: "Test poll",
+        archived: false,
+        participants: [],
+        questions: []
+      },
+      {
+        _id: "second",
+        name: "Archived one",
+        archived: true,
+        participants: [],
+        questions: []
+      }
+    ], router: routingStore
+  },
   {
     fetch: fetcher,
     alert: m => console.log(m) // Noop for demo: window.alert(m)
   }
 );
-// store.login({ name: "bitch", password: "nono" });
+
+const history = syncHistoryWithStore(browserHistory, routingStore);
+
+store.login({ name: "admin", password: "secret" });
 window.store = store;
 
 const PrivateRoute = inject("store")(
@@ -45,16 +70,18 @@ const PrivateRoute = inject("store")(
 class Routes extends Component {
   render() {
     return (
-      <Router>
-        <Provider store={store}>
+      <Provider store={store} routing={routingStore}>
+        <Router history={history}>
           <AppLayout>
             <Switch>
-              <PrivateRoute exact path="/" component ={IndexPage} />
+              <Redirect from="/" exact to="/polls" />
+              <PrivateRoute path="/polls/:pollId?" component={IndexPage} />
               <Route path="/login" component={LoginPage} />
+              <Redirect to="/polls" />
             </Switch>
           </AppLayout>
-        </Provider>
-      </Router>
+        </Router>
+      </Provider>
     );
   }
 }
