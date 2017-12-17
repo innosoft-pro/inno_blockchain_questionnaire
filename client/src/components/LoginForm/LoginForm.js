@@ -18,7 +18,7 @@ export default decl({
             .form
             .validateFields((err, values) => {
                 if (!err) {
-                    console.log('Received values of form: ', values);
+                    this.props.onLogin && this.props.onLogin(values);
                 }
             });
     },
