@@ -51,6 +51,6 @@ export default decl(
     }
   },
   me => {
-    return inject("store")(inject("routing")(withRouter(observer(me))));
+    return inject("store", "routing")(withRouter(observer(me)));
   }
 );

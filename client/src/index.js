@@ -15,7 +15,6 @@ import createBrowserHistory from "history/createBrowserHistory";
 
 const browserHistory = createBrowserHistory();
 const routingStore = new RouterStore();
-window.routing = routingStore;
 const fetcher = url => window.fetch(url).then(response => response.json());
 const store = Store.create(
   {
@@ -24,7 +23,7 @@ const store = Store.create(
         _id: "first",
         name: "Test poll tttoeuhhh oetetetetet ttetetetococ tototoc c",
         archived: false,
-        participants: [],
+        participants: ['tttt', 'oeuoeuoeu'],
         questions: []
       },
       {
@@ -41,11 +40,10 @@ const store = Store.create(
     alert: m => console.log(m) // Noop for demo: window.alert(m)
   }
 );
-
-const history = syncHistoryWithStore(browserHistory, routingStore);
-
 store.login({ name: "admin", password: "secret" });
 window.store = store;
+
+const history = syncHistoryWithStore(browserHistory, routingStore);
 
 const PrivateRoute = inject("store")(
   observer(({ store, component: Component, ...rest }) => (

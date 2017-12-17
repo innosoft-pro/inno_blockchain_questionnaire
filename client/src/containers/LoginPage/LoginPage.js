@@ -23,10 +23,10 @@ export default decl(
         name: values.userName,
         password: values.password
       });
-      this.props.history.push("/");
+      this.props.routing.replace(this.props.routing.location.state.from);
     }
   },
   me => {
-    return inject("store")(me);
+    return inject("store", "routing")(me);
   }
 );
