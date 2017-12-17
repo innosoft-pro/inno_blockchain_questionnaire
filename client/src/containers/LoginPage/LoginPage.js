@@ -6,7 +6,7 @@ export default decl({
     block : 'LoginPage',
     content() {
         return [
-            <h1 key="h">Login</h1>,
+            <h1 key="h">Welcome!</h1>,
             <LoginForm key="f"/>
         ];
     }
