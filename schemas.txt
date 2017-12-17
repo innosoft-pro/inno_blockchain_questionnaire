@@ -11,20 +11,82 @@ polls collection structure:
 		'options' : null / [..., ..., ...]
 	}
 	]
+	'answers': []
 }
 
-answers collection structure:
+Пустой опрос для вставки:
+
 {
-	poll_id: string,
-	participant_telegram_id: string,
-	answers: [
+	"archived": false,
+	"participants": [],
+	"name" : "ok_poll",
+	"questions": 
+	[
 		{
-		'question_text': string
-		'type': 'open' / 'select' / 'multiselect'
-		'answer' : string
-		'likes': num,
-		'dislikes' : num
+			"text": "Kak dela epta?",
+			"type": "open",
+			"options" : null 
+		},
+		{
+			"text": "1 or 2?",
+			"type": "select",
+			"options" : ["1", "2"] 
+		},
+		
+		{
+			"text": "1 or 2 or 3 or 4?",
+			"type": "multiselect",
+			"options" : ["1", "2", "3", "4"] 
 		}
-	]
+	],
+	"answers": []
+		
 }
 
+
+Вопрос с ответами:
+
+{
+	"archived": false,
+	"participants": [],
+	"name" : "ok_poll",
+	"questions": 
+	[
+		{
+			"text": "Kak dela?",
+			"type": "open",
+			"options" : null 
+		},
+		{
+			"text": "1 or 2?",
+			"type": "select",
+			"options" : ["1", "2"] 
+		},
+		
+		{
+			"text": "1 or 2 or 3 or 4?",
+			"type": "multiselect",
+			"options" : ["1", "2", "3", "4"] 
+		}
+	],
+    "answers": [
+        {
+            "answers": [
+                {
+                    "a": "ok",
+                    "q": "Kak dela?"
+                },
+                {
+                    "a": "1",
+                    "q": "1 or 2?"
+                },
+                {
+                    "a": "3",
+                    "q": "1 or 2 or 3 or 4?"
+                }
+            ],
+            "hash": "transaction_hash_string",
+            "user": "5a36cd8c908d9e0001f8e13a"
+        }
+    ]
+}
