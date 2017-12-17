@@ -9,6 +9,30 @@
   flex: 1;
 }
 
-.Footer {
+.Header {
   background: orange;
+  text-transform: uppercase;
+}
+
+.Header a {
+  color: #001529;
+  display: inline-block;
+}
+
+.Footer {
+  background: #001529;
+}
+
+.Footer a {
+  color: orange;
+  display: inline-block;
+}
+
+.Header a:hover, .Footer a:hover {
+  color: aliceblue;
+}
+
+.Logo {
+  font-size: 30px;
+  margin-right: 10px;
 }
