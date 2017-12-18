@@ -28,12 +28,14 @@ def contacts_processor(user, bot, update):
     phone = update.message.contact.phone_number
     first_name = update.message.contact.first_name
     last_name = update.message.contact.last_name
+    username = update.message.from_user.username
     bot.send_message(chat_id=update.message.chat_id, text="Секундочку, создаем вам etherium кошелек",
                      reply_markup={'hide_keyboard': True})
     eth_wallet = get_etherium_wallet()
-    user['phone'] = phone,
-    user['first_name'] = first_name,
-    user['last_name'] = last_name,
+    user['phone'] = phone
+    user['first_name'] = first_name
+    user['last_name'] = last_name
+    user['username'] = username
     user['etherium_wallet'] = eth_wallet
     user['state'] = 'on_polls_main_menu'
     user = users_repo.update(user)
