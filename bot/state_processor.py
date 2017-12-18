@@ -114,8 +114,10 @@ def active_polls_menu_processor(user, bot, update):
 def archive_poll_menu_processor(user, bot, update):
     poll = polls_repo.find_one({'name': update.message.text, 'archived': True})
     if poll:
-        user['state'] = 'on_archive_poll'
-        user = users_repo.update(user)
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Опрос в архиве")
+        # user['state'] = 'on_archive_poll'
+        # user = users_repo.update(user)
     elif update.message.text == 'Вернуться в главное меню':
         user['state'] = 'on_polls_main_menu'
         user = users_repo.update(user)
