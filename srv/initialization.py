@@ -5,6 +5,7 @@ import logging
 
 from flask import Flask, jsonify
 from api import api_blueprint
+from flask_cors import CORS
 
 from logs.loggers import setup_logging
 
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 # Initialization of the app
 app = Flask(__name__)
 app.register_blueprint(api_blueprint)
+CORS(app)
 
 
 @app.errorhandler(404)

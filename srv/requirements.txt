@@ -5,3 +5,4 @@ gunicorn==19.6.0
 futures==3.0.5
 flask==0.12
 flask-script
+flask_cors
