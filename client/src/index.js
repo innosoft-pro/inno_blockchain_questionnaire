@@ -24,7 +24,22 @@ const store = Store.create(
         name: "Test poll tttoeuhhh oetetetetet ttetetetococ tototoc c",
         archived: false,
         participants: ['tttt', 'oeuoeuoeu'],
-        questions: []
+        questions: [
+          {
+            text: "First open question",
+            type: "open"
+          },
+          {
+            text: "second select q",
+            type: "select",
+            options: ["one", "two", "three"]
+          },
+          {
+            text: "Third multi",
+            type: "multiselect",
+            options: ["1", "2", "3"]
+          }
+        ]
       },
       {
         _id: "second",
