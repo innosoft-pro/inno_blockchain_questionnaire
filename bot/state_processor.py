@@ -1,8 +1,9 @@
 import logging
 
+from bson.objectid import ObjectId
 from telegram.keyboardbutton import KeyboardButton
 from telegram.replykeyboardmarkup import ReplyKeyboardMarkup
-from bson.objectid import ObjectId
+
 import utils
 from mongo_repository import MongoRepository
 
@@ -91,11 +92,12 @@ def active_polls_menu_processor(user, bot, update):
         button_list = []
         active_polls = polls_repo.get_cursor({'archived': False})
         for poll in active_polls:
-            button_list.append(KeyboardButton(poll['name']))
+            if (not poll['participants']) or (poll['participants'] and user['username'] in poll['participants']):
+                button_list.append(KeyboardButton(poll['name']))
         button_list.append(KeyboardButton('Вернуться в главное меню'))
 
         reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
-        if active_polls.count():
+        if len(button_list) > 1:
             bot.send_message(chat_id=update.message.chat_id,
                              text="Выберите опрос для прохождения",
                              reply_markup=reply_markup)
