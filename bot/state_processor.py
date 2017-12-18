@@ -121,11 +121,12 @@ def archive_poll_menu_processor(user, bot, update):
         archive_polls = polls_repo.get_cursor({'archived': True})
 
         for poll in archive_polls:
-            button_list.append(KeyboardButton(poll['name']))
+            if (not poll['participants']) or (poll['participants'] and user['username'] in poll['participants']):
+                button_list.append(KeyboardButton(poll['name']))
         button_list.append(KeyboardButton('Вернуться в главное меню'))
 
         reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
-        if archive_polls.count():
+        if len(button_list) > 1:
             bot.send_message(chat_id=update.message.chat_id,
                              text="Эти опросы нельзя пройти",
                              reply_markup=reply_markup)
@@ -174,8 +175,6 @@ def poll_processor(user, bot, update):
             user['current_questions_answers'].append({
                 'question_text': current_question['text'],
                 'type': current_question['text'],
-                'likes': 0,
-                'dislikes': 0,
                 'answer': update.message.text
             })
             user = users_repo.update(user)
@@ -219,13 +218,32 @@ def poll_processor(user, bot, update):
         bot.send_message(chat_id=update.message.chat_id,
                          text='Хэш транзакции: ' + transaction_hash,
                          reply_markup={'hide_keyboard': True})
-        end_poll_processor(user, bot, update)
+        end_poll_processor(user, bot, update, come_from='poll_processor')
 
 
-def end_poll_processor(user, bot, update):
+def end_poll_processor(user, bot, update, come_from=None):
     poll = polls_repo.find_one({'name': update.message.text, 'archived': False})
-
-    if update.message.text == 'Показать мои ответы':
+    if come_from and come_from == 'rating_processor':
+        button_list = [
+            KeyboardButton("Показать мои ответы"),
+            KeyboardButton("Прорейтинговать ответы других участников"),
+            KeyboardButton("Вернуться в главное меню")
+        ]
+        reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Вы вернулись в меню пройденного опроса",
+                         reply_markup=reply_markup)
+    elif come_from and come_from == 'poll_processor':
+        button_list = [
+            KeyboardButton("Показать мои ответы"),
+            KeyboardButton("Прорейтинговать ответы других участников"),
+            KeyboardButton("Вернуться в главное меню")
+        ]
+        reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Опрос пройден успешно!",
+                         reply_markup=reply_markup)
+    elif update.message.text == 'Показать мои ответы':
         answers_record = answers_repo.find_one({'poll_id': str(user['current_poll']), 'user_id': str(user['_id'])})
         message = 'Хэш транзакции: ' + answers_record['hash'] + '\n'
         for answer in answers_record['answers']:
@@ -239,6 +257,7 @@ def end_poll_processor(user, bot, update):
         user['state'] = 'on_rating'
         user = users_repo.update(user)
         rating_processor(user, bot, update)
+        return
     elif update.message.text == 'Вернуться в главное меню':
         user['state'] = 'on_polls_main_menu'
         user = users_repo.update(user)
@@ -261,12 +280,34 @@ def end_poll_processor(user, bot, update):
         ]
         reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
         bot.send_message(chat_id=update.message.chat_id,
-                         text="Опрос пройден успешно!",
+                         text="Вы вернулись в меню пройденного опроса",
                          reply_markup=reply_markup)
 
 
 def rating_processor(user, bot, update):
-    poll = polls_repo.find_one({'name': update.message.text, 'archived': False})
+    poll = polls_repo.find_one({'_id': ObjectId(user['current_poll'])})
+    try:
+        next(q for q in poll['questions'] if q['type'] == 'open')
+    except StopIteration:
+        user['state'] = 'on_poll_end'
+        user = users_repo.update(user)
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="В опросе нет вопросов со свободной формой ответа, функция недоступна",
+                         reply_markup={'hide_keyboard': True})
+        end_poll_processor(user, bot, update, come_from='rating_processor')
+        return
+
+    other_answers = answers_repo.get_cursor(
+        {'poll_id': str(user['current_poll']), 'user_id': {'$ne': str(user['_id'])}})
+    if not other_answers.count():
+        user['state'] = 'on_poll_end'
+        user = users_repo.update(user)
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Никто кроме вас еще не прошел опрос, функция недоступна",
+                         reply_markup={'hide_keyboard': True})
+        end_poll_processor(user, bot, update, come_from='rating_processor')
+        return
+    # already_asked = set()
 
 
 def get_etherium_wallet():
