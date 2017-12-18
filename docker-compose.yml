@@ -1,0 +1,26 @@
+version: '2'
+
+services:
+  bchquiz_web:
+    image: bchquiz_web:latest
+    container_name: bchquiz_web
+    command: gunicorn -b 0.0.0.0:5000 --capture-output --error-logfile - --access-logfile - --workers 1 initialization:app
+    ports:
+      - "5000:5000"
+    links:
+      - mongo
+
+  bchquiz_bot:
+    image: bchquiz_bot:latest
+    container_name: bchquiz_bot
+    command: python3 inno_quiz_bot.py
+    ports:
+      - "5001:5001"
+    links:
+      - mongo
+
+
+  mongo:
+    image: mongo:latest
+    container_name: bchquiz_mongo
+
