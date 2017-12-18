@@ -22,10 +22,6 @@ const fetcher = (url, params) =>  window
 
 const store = Store.create({
   polls: [],
-  user: {
-    name: "kitty",
-    password: 'okk'
-  }
 }, {
   fetch: fetcher,
   routing: routingStore,
@@ -71,10 +67,10 @@ class Routes extends Component {
         <Router history={history}>
           <AppLayout>
             <Switch>
-              <Redirect from="/" exact to="/polls"/>
-              <PrivateRoute path="/polls/:pollId?" component={IndexPage}/>
+              <Redirect from="/" exact to="/list"/>
+              <PrivateRoute path="/list/:pollId?" component={IndexPage}/>
               <Route path="/login" component={LoginPage}/>
-              <Redirect to="/polls"/>
+              <Redirect to="/list"/>
             </Switch>
           </AppLayout>
         </Router>

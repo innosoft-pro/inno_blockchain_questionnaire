@@ -22,7 +22,7 @@ export default decl({
         </Sider>
         <Content>
           <Switch>
-            <Route exact path="/polls/:pollId" component={Poll}/>
+            <Route exact path="/list/:pollId" component={Poll}/>
           </Switch>
         </Content>
       </Layout>

@@ -90,7 +90,7 @@ export const Store = types.model("Store", {
                     }, json));
                     getEnv(self)
                         .routing
-                        .push('/polls/' + json._id);
+                        .push('/list/' + json._id);
                 }
             }
         } catch (err) {

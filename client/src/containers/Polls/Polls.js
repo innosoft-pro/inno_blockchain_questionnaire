@@ -47,7 +47,7 @@ export default decl(
     },
 
     selectPoll({ key }) {
-      this.props.routing.push("/polls/" + key);
+      this.props.routing.push("/list/" + key);
     }
   },
   me => {
