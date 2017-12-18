@@ -2,12 +2,13 @@ import logging
 
 from telegram.keyboardbutton import KeyboardButton
 from telegram.replykeyboardmarkup import ReplyKeyboardMarkup
-
+from bson.objectid import ObjectId
 import utils
 from mongo_repository import MongoRepository
 
 users_repo = MongoRepository('users')
 polls_repo = MongoRepository('polls')
+answers_repo = MongoRepository('answers')
 logger = logging.getLogger(__name__)
 
 
@@ -65,16 +66,16 @@ def active_polls_menu_processor(user, bot, update):
     poll = polls_repo.find_one({'name': update.message.text, 'archived': False})
 
     if poll:
-        try:
-            next(item for item in poll['answers'] if item['user'] == str(user['_id']))
+        answer = answers_repo.find_one({'poll_id': str(poll['_id']), 'user_id': str(user['_id'])})
+        if answer:
             user['state'] = 'on_poll_end'
-            user['current_poll'] = poll['_id']
+            user['current_poll'] = str(poll['_id'])
             user['current_questions_answers'] = []
             user = users_repo.update(user)
             end_poll_processor(user, bot, update)
-        except StopIteration:
+        else:
             user['state'] = 'on_poll_start'
-            user['current_poll'] = poll['_id']
+            user['current_poll'] = str(poll['_id'])
             user['current_questions_answers'] = []
             user = users_repo.update(user)
             poll_start_processor(user, bot, update)
@@ -122,7 +123,7 @@ def archive_poll_menu_processor(user, bot, update):
         reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
         if archive_polls.count():
             bot.send_message(chat_id=update.message.chat_id,
-                             text="Выберите опрос для просмотра",
+                             text="Эти опросы нельзя пройти",
                              reply_markup=reply_markup)
         else:
             bot.send_message(chat_id=update.message.chat_id,
@@ -131,7 +132,7 @@ def archive_poll_menu_processor(user, bot, update):
 
 
 def poll_start_processor(user, bot, update):
-    poll = polls_repo.find_one({'_id': user['current_poll']})
+    poll = polls_repo.find_one({'_id': ObjectId(user['current_poll'])})
     question = poll['questions'][0]
     bot.send_message(chat_id=update.message.chat_id,
                      text='Сейчас вам будут задаваться вопросы.',
@@ -153,19 +154,25 @@ def poll_start_processor(user, bot, update):
 
 
 def poll_processor(user, bot, update):
-    poll = polls_repo.find_one({'_id': user['current_poll']})
+    poll = polls_repo.find_one({'_id': ObjectId(user['current_poll'])})
     current_question = poll['questions'][len(user['current_questions_answers'])]
     if current_question['type'] == 'open':
         user['current_questions_answers'].append({
-            'q': current_question['text'],
-            'a': update.message.text
+            'question_text': current_question['text'],
+            'type': current_question['text'],
+            'likes': 0,
+            'dislikes': 0,
+            'answer': update.message.text
         })
         user = users_repo.update(user)
     elif current_question['type'] in ['select', 'multiselect']:
         if update.message.text in current_question['options']:
             user['current_questions_answers'].append({
-                'q': current_question['text'],
-                'a': update.message.text
+                'question_text': current_question['text'],
+                'type': current_question['text'],
+                'likes': 0,
+                'dislikes': 0,
+                'answer': update.message.text
             })
             user = users_repo.update(user)
         else:
@@ -191,14 +198,16 @@ def poll_processor(user, bot, update):
         bot.send_message(chat_id=update.message.chat_id,
                          text='Секундочку, сохраняем результаты в блокчейн',
                          reply_markup={'hide_keyboard': True})
-        transaction_hash = save_answers(user['etherium_wallet'], user['current_questions_answers'])
 
-        poll['answers'].append({
-            'user': user['_id'],
+        q_a = [{'q': answer['question_text'], 'a': answer['answer']} for answer in user['current_questions_answers']]
+        transaction_hash = save_answers(user['etherium_wallet'], q_a)
+
+        answers_repo.insert({
+            'poll_id': str(poll['_id']),
+            'user_id': str(user['_id']),
             'answers': user['current_questions_answers'],
             'hash': transaction_hash
         })
-        polls_repo.update(poll)
 
         user['state'] = 'on_poll_end'
         user['current_questions_answers'] = []
@@ -213,19 +222,19 @@ def end_poll_processor(user, bot, update):
     poll = polls_repo.find_one({'name': update.message.text, 'archived': False})
 
     if update.message.text == 'Показать мои ответы':
-        poll = polls_repo.find_one({'_id': user['current_poll']})
-        answers_record = next(item for item in poll['answers'] if item['user'] == str(user['_id']))
+        answers_record = answers_repo.find_one({'poll_id': str(user['current_poll']), 'user_id': str(user['_id'])})
         message = 'Хэш транзакции: ' + answers_record['hash'] + '\n'
         for answer in answers_record['answers']:
-            message += 'Вопрос: ' + answer['q'] + '\n'
-            message += 'Ответ: ' + answer['a'] + '\n'
+            message += 'Вопрос: ' + answer['question_text'] + '\n'
+            message += 'Ответ: ' + answer['answer'] + '\n'
 
         bot.send_message(chat_id=update.message.chat_id,
                          text=message)
 
     elif update.message.text == 'Прорейтинговать ответы других участников':
-        user['state'] = 'on_poll_end'
+        user['state'] = 'on_rating'
         user = users_repo.update(user)
+        rating_processor(user, bot, update)
     elif update.message.text == 'Вернуться в главное меню':
         user['state'] = 'on_polls_main_menu'
         user = users_repo.update(user)
@@ -250,6 +259,10 @@ def end_poll_processor(user, bot, update):
         bot.send_message(chat_id=update.message.chat_id,
                          text="Опрос пройден успешно!",
                          reply_markup=reply_markup)
+
+
+def rating_processor(user, bot, update):
+    poll = polls_repo.find_one({'name': update.message.text, 'archived': False})
 
 
 def get_etherium_wallet():
