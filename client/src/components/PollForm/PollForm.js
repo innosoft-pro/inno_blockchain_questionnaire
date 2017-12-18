@@ -6,10 +6,7 @@ import {
   Icon,
   Input,
   Button,
-  Checkbox,
-  Row,
   Switch,
-  Col,
   Card,
   Table,
   Select
@@ -49,15 +46,27 @@ export default decl({
     this
       .props
       .form
+      .getFieldDecorator('questions[' + size + '].text');
+    this
+      .props
+      .form
       .setFieldsValue({
         ['questions[' + size + '].text']: ''
       });
     this
       .props
       .form
+      .getFieldDecorator('questions[' + size + '].type');
+    this
+      .props
+      .form
       .setFieldsValue({
         ['questions[' + size + '].type']: ''
       });
+    this
+      .props
+      .form
+      .getFieldDecorator('questions[' + size + '].options');
     this
       .props
       .form
@@ -77,6 +86,12 @@ export default decl({
       }
     };
     window.form = this.props.form;
+    const rules = [
+      {
+        required: true,
+        message: "Please, enter value!"
+      }
+    ];
     const title = poll._id
       ? "Edit Poll #" + poll._id
       : "Create Poll";
@@ -87,25 +102,37 @@ export default decl({
         dataIndex: 'text',
         width: 400,
         render: (text, record) => {
-          return this
-            .props
-            .form
-            .getFieldDecorator("questions[" + record.key + "].text", {initialValue: record.text})(<TextArea autosize/>);
+          return (
+            <FormItem>
+              {this
+                .props
+                .form
+                .getFieldDecorator("questions[" + record.key + "].text", {
+                  initialValue: record.text,
+                  rules: rules
+                })(<TextArea autosize/>)}
+            </FormItem>
+          );
         }
       }, {
         title: 'Type',
         dataIndex: 'type',
         render: (text, record) => {
-          return this
-            .props
-            .form
-            .getFieldDecorator("questions[" + record.key + "].type", {initialValue: record.type})(
-              <Select>
-                <Option value="open">Open question</Option>
-                <Option value="select">Options</Option>
-                <Option value="multiselect">Multiple options</Option>
-              </Select>
-            );
+          return (
+            <FormItem>{this
+                .props
+                .form
+                .getFieldDecorator("questions[" + record.key + "].type", {
+                  initialValue: record.type,
+                  rules: rules
+                })(
+                  <Select>
+                    <Option value="open">Open question</Option>
+                    <Option value="select">Options</Option>
+                    <Option value="multiselect">Multiple options</Option>
+                  </Select>
+                )}</FormItem>
+          );
         }
       }, {
         title: 'Options',
@@ -131,6 +158,8 @@ export default decl({
         options: getFieldValue('questions[' + i + '].options')
       });
     }
+
+    getFieldDecorator('_id');
 
     return (
       <Card className="Card" title={title}>
@@ -185,12 +214,14 @@ export default decl({
       .form
       .validateFields((err, values) => {
         if (!err) {
-          console.log("Received values of form: ", values);
+          this.props.onSubmit && this
+            .props
+            .onSubmit(values);
         }
       });
   }
 }, (me) => {
-  return observer(Form.create({
+  return Form.create({
     mapPropsToFields({poll}) {
       let props = {
         name: Form.createFormField({value: poll.name}),
@@ -199,10 +230,12 @@ export default decl({
             .participants
             .slice()
         }),
-        archived: Form.createFormField({value: poll.archived})
+        archived: Form.createFormField({value: poll.archived}),
+        _id: Form.createFormField({value: poll._id})
       };
       const l = poll.questions.length;
       props["size"] = Form.createFormField({value: l});
+      props["questions"] = Form.createFormField({value: []});
       for (let i = 0; i < l; i++) {
         const options = poll.questions[i].options || [];
         props["questions[" + i + "].text"] = Form.createFormField({value: poll.questions[i].text});
@@ -213,5 +246,5 @@ export default decl({
       }
       return props;
     }
-  })(me));
+  })(observer(me));
 });

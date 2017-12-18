@@ -2,6 +2,7 @@ import React from 'react';
 import {Form, Icon, Input, Button} from 'antd';
 import { decl } from 'bem-react-core';
 
+
 const FormItem = Form.Item;
 
 export default decl({
@@ -64,5 +65,5 @@ export default decl({
         );
     }
 }, (me) => {
-    return Form.create()(me);
+    return Form.create({})(me);
 });

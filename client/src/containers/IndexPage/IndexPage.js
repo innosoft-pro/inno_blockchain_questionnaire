@@ -1,23 +1,28 @@
 import React from "react";
-import { Layout } from "antd";
-import { decl } from "bem-react-core";
+import {Layout} from "antd";
+import {decl} from "bem-react-core";
 import Polls from "b:Polls";
 import Poll from "b:Poll";
-import { Route, Switch } from "react-router-dom";
+import {Route, Switch} from "react-router-dom";
 
-const { Sider, Content } = Layout;
+const {Sider, Content} = Layout;
 
 export default decl({
   block: "IndexPage",
-  content({ match }) {
+
+  content({match}) {
     return (
-      <Layout style={{ width: "100%" }}>
-        <Sider style={{ background: "#fff" }}>
-          <Polls />
+      <Layout style={{
+        width: "100%"
+      }}>
+        <Sider style={{
+          background: "#fff"
+        }}>
+          <Polls/>
         </Sider>
         <Content>
           <Switch>
-            <Route exact path="/polls/:pollId" component={Poll} />
+            <Route exact path="/polls/:pollId" component={Poll}/>
           </Switch>
         </Content>
       </Layout>
