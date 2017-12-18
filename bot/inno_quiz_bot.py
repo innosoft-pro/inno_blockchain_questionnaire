@@ -39,12 +39,16 @@ STATES = [
     'on_poll',
     'on_archive_poll',
     'on_poll_end',
+    'on_rating_start',
     'on_rating'
 ]
 
 
 def all_states_handler(user, bot, update):
     if not user or not user.get('state') or user['state'] not in STATES:
+        logger.error(str(user))
+        logger.error(str(user['state']))
+        logger.error(str(user['state'] in STATES))
         raise RuntimeError('Bad user received')
 
     if user['state'] == 'new':
@@ -70,6 +74,9 @@ def all_states_handler(user, bot, update):
 
     elif user['state'] == 'on_poll_end':
         state_processor.end_poll_processor(user, bot, update)
+
+    elif user['state'] == 'on_rating_start':
+        state_processor.rating_start_processor(user, bot, update)
 
     elif user['state'] == 'on_rating':
         state_processor.rating_processor(user, bot, update)

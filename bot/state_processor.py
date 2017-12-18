@@ -1,4 +1,5 @@
 import logging
+import random
 
 from bson.objectid import ObjectId
 from telegram.keyboardbutton import KeyboardButton
@@ -11,6 +12,8 @@ users_repo = MongoRepository('users')
 polls_repo = MongoRepository('polls')
 answers_repo = MongoRepository('answers')
 logger = logging.getLogger(__name__)
+
+QUESTIONS_TO_RATE = 10
 
 
 def initial_contact_requester(user, bot, update):
@@ -38,6 +41,7 @@ def contacts_processor(user, bot, update):
     user['last_name'] = last_name
     user['username'] = username
     user['etherium_wallet'] = eth_wallet
+    user['ratings'] = []
     user['state'] = 'on_polls_main_menu'
     user = users_repo.update(user)
     bot.send_message(chat_id=update.message.chat_id, text="Вам создан etherium кошелек " + eth_wallet)
@@ -164,7 +168,7 @@ def poll_processor(user, bot, update):
     if current_question['type'] == 'open':
         user['current_questions_answers'].append({
             'question_text': current_question['text'],
-            'type': current_question['text'],
+            'type': current_question['type'],
             'likes': 0,
             'dislikes': 0,
             'answer': update.message.text
@@ -223,7 +227,7 @@ def poll_processor(user, bot, update):
 
 def end_poll_processor(user, bot, update, come_from=None):
     poll = polls_repo.find_one({'name': update.message.text, 'archived': False})
-    if come_from and come_from == 'rating_processor':
+    if come_from and come_from == 'start_rating_processor':
         button_list = [
             KeyboardButton("Показать мои ответы"),
             KeyboardButton("Прорейтинговать ответы других участников"),
@@ -254,9 +258,9 @@ def end_poll_processor(user, bot, update, come_from=None):
                          text=message)
 
     elif update.message.text == 'Прорейтинговать ответы других участников':
-        user['state'] = 'on_rating'
+        user['state'] = 'on_rating_start'
         user = users_repo.update(user)
-        rating_processor(user, bot, update)
+        rating_start_processor(user, bot, update)
         return
     elif update.message.text == 'Вернуться в главное меню':
         user['state'] = 'on_polls_main_menu'
@@ -284,7 +288,7 @@ def end_poll_processor(user, bot, update, come_from=None):
                          reply_markup=reply_markup)
 
 
-def rating_processor(user, bot, update):
+def rating_start_processor(user, bot, update):
     poll = polls_repo.find_one({'_id': ObjectId(user['current_poll'])})
     try:
         next(q for q in poll['questions'] if q['type'] == 'open')
@@ -294,20 +298,118 @@ def rating_processor(user, bot, update):
         bot.send_message(chat_id=update.message.chat_id,
                          text="В опросе нет вопросов со свободной формой ответа, функция недоступна",
                          reply_markup={'hide_keyboard': True})
-        end_poll_processor(user, bot, update, come_from='rating_processor')
+        end_poll_processor(user, bot, update, come_from='start_rating_processor')
         return
 
-    other_answers = answers_repo.get_cursor(
+    other_answers_cursor = answers_repo.get_cursor(
         {'poll_id': str(user['current_poll']), 'user_id': {'$ne': str(user['_id'])}})
-    if not other_answers.count():
+    if not other_answers_cursor.count():
         user['state'] = 'on_poll_end'
         user = users_repo.update(user)
         bot.send_message(chat_id=update.message.chat_id,
                          text="Никто кроме вас еще не прошел опрос, функция недоступна",
                          reply_markup={'hide_keyboard': True})
-        end_poll_processor(user, bot, update, come_from='rating_processor')
+        end_poll_processor(user, bot, update, come_from='start_rating_processor')
         return
-    # already_asked = set()
+
+    try:
+        next(r for r in user['ratings'] if
+             r['poll_id'] == str(user['current_poll']) and r.get('questions_rated') and r['questions_rated'] == len(
+                 r['questions']))
+        user['state'] = 'on_poll_end'
+        user = users_repo.update(user)
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Вы уже рейтинговали ответы в этом вопросе",
+                         reply_markup={'hide_keyboard': True})
+        end_poll_processor(user, bot, update, come_from='start_rating_processor')
+        return
+    except StopIteration:
+        pass
+
+    all_questions = []
+    for answer in other_answers_cursor:
+        for q_a in answer['answers']:
+            if q_a['type'] == 'open':
+                all_questions.append({
+                    'answer_id': answer['_id'],
+                    'question': q_a['question_text'],
+                    'answer': q_a['answer']
+                })
+
+    if len(all_questions) <= QUESTIONS_TO_RATE:
+        user['ratings'].append({
+            'poll_id': str(user['current_poll']),
+            'questions_rated': 0,
+            'questions': all_questions
+        })
+    else:
+        question_list = []
+        already_picked_questions = set()
+        while len(question_list) < QUESTIONS_TO_RATE:
+            num = random.randint(0, len(all_questions) - 1)
+            if num not in already_picked_questions:
+                question_list.append(all_questions[num])
+                already_picked_questions.add(num)
+        user['ratings'].append({
+            'poll_id': str(user['current_poll']),
+            'questions_rated': 0,
+            'questions': question_list
+        })
+
+    user['state'] = 'on_rating'
+    user = users_repo.update(user)
+    bot.send_message(chat_id=update.message.chat_id,
+                     text="Сейчас вы увидите вопросы и ответы других участников. "
+                          "Если ответ вам понравился, нажмите '+1'. Иначе - '-1'",
+                     reply_markup={'hide_keyboard': True})
+    rating_processor(user, bot, update)
+
+
+def rating_processor(user, bot, update):
+    current_ratings_record = next(
+        record for record in user['ratings'] if record['poll_id'] == str(user['current_poll']))
+    if update.message.text == '+1':
+        question_to_rate = next(
+            question for question in current_ratings_record['questions'] if not question.get('rate'))
+        question_to_rate['rate'] = 1
+        current_ratings_record['questions_rated'] += 1
+        users_repo.update(user)
+    elif update.message.text == '-1':
+        question_to_rate = next(
+            question for question in current_ratings_record['questions'] if not question.get('rate'))
+        question_to_rate['rate'] = -1
+        current_ratings_record['questions_rated'] += 1
+        users_repo.update(user)
+
+    try:
+        question_to_rate = next(
+            question for question in current_ratings_record['questions'] if not question.get('rate'))
+        button_list = [
+            KeyboardButton("+1"),
+            KeyboardButton("-1")
+        ]
+        reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
+        bot.send_message(chat_id=update.message.chat_id,
+                         text='Вопрос: ' + question_to_rate['question'] + '\n' + 'Ответ: ' + question_to_rate['answer'],
+                         reply_markup=reply_markup)
+
+    except StopIteration:
+        for question in current_ratings_record['questions']:
+            true_answer_record = answers_repo.find_one({'_id': ObjectId(question['answer_id'])})
+            answer = next(
+                answer for answer in true_answer_record['answers'] if answer['question_text'] == question['question'])
+            if question['rate'] == -1:
+                answer['dislikes'] += 1
+            elif question['rate'] == 1:
+                answer['likes'] += 1
+            answers_repo.update(true_answer_record)
+
+        user['state'] = 'on_poll_end'
+        user = users_repo.update(user)
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Спасибо за участие в оценке ответов!",
+                         reply_markup={'hide_keyboard': True})
+        end_poll_processor(user, bot, update)
 
 
 def get_etherium_wallet():
