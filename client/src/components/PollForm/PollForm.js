@@ -1,5 +1,6 @@
 import React from "react";
 import {decl} from "bem-react-core";
+import {observer} from "mobx-react";
 import {
   Form,
   Icon,
@@ -34,22 +35,34 @@ export default decl({
     this
       .props
       .form
-      .getFieldDecorator("questions");
-    let questions = this
+      .getFieldDecorator('size');
+    const size = this
       .props
       .form
-      .getFieldValue('questions').slice();
-    questions.push({text: '', type: 'open', options: []});
-
+      .getFieldValue('size');
     this
       .props
       .form
       .setFieldsValue({
-        questions: questions.map((q, ind) => {
-          return Object.assign({
-            key: ind
-          }, q);
-        })
+        'size': size + 1
+      });
+    this
+      .props
+      .form
+      .setFieldsValue({
+        ['questions[' + size + '].text']: ''
+      });
+    this
+      .props
+      .form
+      .setFieldsValue({
+        ['questions[' + size + '].type']: ''
+      });
+    this
+      .props
+      .form
+      .setFieldsValue({
+        ['questions[' + size + '].options']: []
       });
   },
 
@@ -63,51 +76,61 @@ export default decl({
         span: 17
       }
     };
+    window.form = this.props.form;
     const title = poll._id
       ? "Edit Poll #" + poll._id
       : "Create Poll";
+
     const columns = [
-      {
-        title: '#',
-        dataIndex: 'key',
-        render: (text, record) => {
-          getFieldDecorator("questions[" + record.key + "]", {});
-          return text;
-        }
-      },
       {
         title: 'Text',
         dataIndex: 'text',
         width: 400,
         render: (text, record) => {
-          return getFieldDecorator("questions[" + record.key + "]", {valuePropName: 'text'})(<TextArea autosize/>);
+          return this
+            .props
+            .form
+            .getFieldDecorator("questions[" + record.key + "].text", {initialValue: record.text})(<TextArea autosize/>);
         }
       }, {
         title: 'Type',
         dataIndex: 'type',
         render: (text, record) => {
-          return  getFieldDecorator("questions[" + record.key + "].type", {initialValue: text})(
-            <Select>
-              <Option value="open">Open question</Option>
-              <Option value="select">Options</Option>
-              <Option value="multiselect">Multiple options</Option>
-            </Select>
-          );
+          return this
+            .props
+            .form
+            .getFieldDecorator("questions[" + record.key + "].type", {initialValue: record.type})(
+              <Select>
+                <Option value="open">Open question</Option>
+                <Option value="select">Options</Option>
+                <Option value="multiselect">Multiple options</Option>
+              </Select>
+            );
         }
       }, {
         title: 'Options',
         dataIndex: 'options',
         render: (text, record) => {
-          const value = text && text.slice() || [];
-          return getFieldDecorator("questions[" + record.key + "].options", {initialValue: value})(
-            <Select mode="tags"></Select>
-          );
+          return this
+            .props
+            .form
+            .getFieldDecorator("questions[" + record.key + "].options", {initialValue: record.options})(
+              <Select mode="tags"></Select>
+            );
         }
       }
     ];
 
-    const questions = getFieldValue('questions');
-    console.log('data', questions);
+    let questions = [];
+    const size = getFieldValue('size');
+    for (let i = 0; i < size; i++) {
+      questions.push({
+        key: i,
+        type: getFieldValue('questions[' + i + '].type'),
+        text: getFieldValue('questions[' + i + '].text'),
+        options: getFieldValue('questions[' + i + '].options')
+      });
+    }
 
     return (
       <Card className="Card" title={title}>
@@ -167,32 +190,28 @@ export default decl({
       });
   }
 }, (me) => {
-  return Form.create({
+  return observer(Form.create({
     mapPropsToFields({poll}) {
-      return {
+      let props = {
         name: Form.createFormField({value: poll.name}),
         participants: Form.createFormField({
           value: poll
             .participants
             .slice()
         }),
-        archived: Form.createFormField({value: poll.archived}),
-        questions: Form.createFormField({
-          value: poll.questions && poll
-            .questions
-            .slice()
-            .map((q, index) => {
-              return {
-                key: index,
-                text: q.text,
-                type: q.type,
-                options: q.options && q
-                  .options
-                  .slice() || []
-              };
-            }) || []
-        })
+        archived: Form.createFormField({value: poll.archived})
       };
+      const l = poll.questions.length;
+      props["size"] = Form.createFormField({value: l});
+      for (let i = 0; i < l; i++) {
+        const options = poll.questions[i].options || [];
+        props["questions[" + i + "].text"] = Form.createFormField({value: poll.questions[i].text});
+        props["questions[" + i + "].type"] = Form.createFormField({value: poll.questions[i].type});
+        props["questions[" + i + "].options"] = Form.createFormField({
+          value: options.slice()
+        });
+      }
+      return props;
     }
-  })(me);
+  })(me));
 });
