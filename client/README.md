@@ -1,3 +1,15 @@
+Usage:
+- Delete old docker containers from this project (for first run)
+- `cd srv && sh run_server.sh`
+- Change server's url in `client/src/index.js`
+- `cd ../client`
+- `npm install`
+- For development environment: `npm run start`, browser`s page with project's SPA will be opened automatically
+- For production environment: `npm run build`, all project files will be builded and can be found in `client/build` folder
+- In login page you can use default login credentials
+
+------
+
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
 Below you will find some information on how to perform common tasks.<br>
