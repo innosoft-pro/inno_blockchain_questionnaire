@@ -4,16 +4,16 @@ Joined initialization for app component
 import logging
 
 from flask import Flask, jsonify
-from api import api_blueprint
 from flask_cors import CORS
 
+from api import api_blueprint
 from logs.loggers import setup_logging
 
 setup_logging()
 logger = logging.getLogger(__name__)
 
 # Initialization of the app
-app = Flask(__name__)
+app = Flask(__name__, static_folder="./static", template_folder="./front")
 app.register_blueprint(api_blueprint)
 CORS(app)
 

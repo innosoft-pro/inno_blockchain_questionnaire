@@ -1,9 +1,10 @@
 import json
 import logging
 from functools import wraps
+from flask import Flask
 
 from flask import Blueprint, jsonify
-from flask import request, Response
+from flask import request, Response, render_template
 
 from mongo_repository import MongoRepository
 
@@ -39,6 +40,10 @@ def requires_auth(f):
 
     return decorated
 
+
+@api_blueprint.route('/', methods=['GET'])
+def index():
+    return render_template('index.html')
 
 @api_blueprint.route('/version', methods=['GET'])
 @requires_auth
