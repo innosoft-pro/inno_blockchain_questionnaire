@@ -100,6 +100,15 @@ ENV/
 # mypy
 .mypy_cache/
 
+# macOS, idea
+.DS_Store
+.idea
+.vscode
+
+# http rest client files
+http-body.json
+package-lock.json
+
 # User-specific stuff:
 */.idea/**/workspace.xml
 */.idea/**/tasks.xml

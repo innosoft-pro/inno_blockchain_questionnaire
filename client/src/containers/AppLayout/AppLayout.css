@@ -1,0 +1,38 @@
+.Layout {
+  display: flex;
+  min-height: 100vh;
+  height: 100vh;
+  flex-direction: column;
+}
+
+.Content {
+  flex: 1;
+}
+
+.Header {
+  background: orange;
+  text-transform: uppercase;
+}
+
+.Header a {
+  color: #001529;
+  display: inline-block;
+}
+
+.Footer {
+  background: #001529;
+}
+
+.Footer a {
+  color: orange;
+  display: inline-block;
+}
+
+.Header a:hover, .Footer a:hover {
+  color: aliceblue;
+}
+
+.Logo {
+  font-size: 30px;
+  margin-right: 10px;
+}

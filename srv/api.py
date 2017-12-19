@@ -1,9 +1,10 @@
 import json
 import logging
 from functools import wraps
+from flask import Flask
 
 from flask import Blueprint, jsonify
-from flask import request, Response
+from flask import request, Response, render_template
 
 from mongo_repository import MongoRepository
 
@@ -40,7 +41,15 @@ def requires_auth(f):
     return decorated
 
 
-@api_blueprint.route('/version', methods=['GET'])
+@api_blueprint.route('/', methods=['GET'])
+def index():
+    return render_template('index.html')
+
+@api_blueprint.route('/<path:path>', methods=['GET'])
+def any_root_path(path):
+    return render_template('index.html')
+
+@api_blueprint.route('/api/version', methods=['GET'])
 @requires_auth
 def version():
     return jsonify({
@@ -49,7 +58,7 @@ def version():
     })
 
 
-@api_blueprint.route('/poll', methods=['POST'])
+@api_blueprint.route('/api/poll', methods=['POST'])
 @requires_auth
 def save_poll():
     logger.info(request.get_data())
@@ -68,7 +77,7 @@ def save_poll():
         return jsonify(result)
 
 
-@api_blueprint.route('/polls', methods=['GET'])
+@api_blueprint.route('/api/polls', methods=['GET'])
 @requires_auth
 def get_polls():
     polls = polls_repo.get_cursor({})

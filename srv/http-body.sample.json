@@ -1,0 +1,28 @@
+{
+  "archived": false,
+  "participants": [
+    "@vasya",
+    "@petya"
+  ],
+  "name": "Poll #3",
+  "questions": [
+    {
+      "text": "Question #1",
+      "type": "multiselect",
+      "options": [
+        "q1",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "text": "Question #2",
+      "type": "open",
+      "options": null
+    },
+    {
+      "text": "Question #3",
+      "type": "select"
+    }
+  ]
+}
