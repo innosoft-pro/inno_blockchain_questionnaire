@@ -12,7 +12,7 @@ from collections import OrderedDict
 
 bot = telebot.TeleBot(config.token)
 
-POLL_NAME = 'CryptoRF'
+POLL_NAME = 'testCryptoRF'
 
 
 class BCSaveThread(threading.Thread):

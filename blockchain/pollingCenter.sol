@@ -48,7 +48,7 @@ contract Poll {
     
     //mapping (uint => uint[]) public answers;
     mapping (uint => Answer) private answers;
-    
+    mapping (address =>(string=>string)) public historyAnswer;
     event AnswersRecorded(uint);
     event RatingChanged(uint, uint);
     
@@ -56,7 +56,9 @@ contract Poll {
         owner = _owner;
         pollName = _pollName;
     }
-    
+
+    function vote(string)
+
     function getAnswersById(uint id) public constant
     returns (uint[])
     {
@@ -75,7 +77,9 @@ contract Poll {
         answers[id].rating = 0;
         AnswersRecorded(id);
     }
-    
+
+
+
     function changeRating(uint id, uint _rating) public onlyBy(owner)
     {
         answers[id].rating = _rating;

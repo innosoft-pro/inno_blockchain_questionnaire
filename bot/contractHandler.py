@@ -1,7 +1,6 @@
 from time import sleep
 from web3 import Web3, RPCProvider
 from os import path
-import requests
 import json
 import base64
 
@@ -31,7 +30,7 @@ class ContractHandler:
         print(self.contractPC_address)
         print(self.contractPoll_address)
         self.polls = dict()
-        self.polls['CryptoRF'] = self.contractPoll
+        self.polls['testCryptoRF'] = self.contractPoll
         newPollFilter = self.contractPC.on('PollCreated',
                                            {'address': self.contractPC_address },
                                            self.pollCreated)

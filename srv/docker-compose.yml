@@ -14,6 +14,10 @@ services:
     image: mongo:latest
     container_name: bchquiz_mongo
 
-volumes:
-  metro_io:
-
+  etherium_node:
+    image: ethereum/client-go
+    container_name: bchquiz_node
+    command: --testnet --fast --cache=512 --rpcaddr 0.0.0.0
+    ports:
+      - "8545:8545"
+      - "30303:30303"

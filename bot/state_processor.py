@@ -1,6 +1,7 @@
 import logging
 import random
 
+import uuid
 from bson.objectid import ObjectId
 from telegram.keyboardbutton import KeyboardButton
 from telegram.replykeyboardmarkup import ReplyKeyboardMarkup
@@ -35,16 +36,17 @@ def contacts_processor(user, bot, update):
     username = update.message.from_user.username
     bot.send_message(chat_id=update.message.chat_id, text="Секундочку, создаем вам etherium кошелек",
                      reply_markup={'hide_keyboard': True})
-    eth_wallet = get_etherium_wallet()
+    eth_password = uuid.uuid4()
+    eth_wallet = get_etherium_wallet(eth_password)
     user['phone'] = phone
     user['first_name'] = first_name
     user['last_name'] = last_name
     user['username'] = username
-    user['etherium_wallet'] = eth_wallet
+    user['ethereum_wallet'] = (eth_wallet, eth_password)
     user['ratings'] = []
     user['state'] = 'on_polls_main_menu'
     user = users_repo.update(user)
-    bot.send_message(chat_id=update.message.chat_id, text="Вам создан etherium кошелек " + eth_wallet)
+    bot.send_message(chat_id=update.message.chat_id, text="Вам создан ethereum кошелек " + eth_wallet)
     main_menu_processor(user, bot, update)
 
 
@@ -414,17 +416,16 @@ def rating_processor(user, bot, update):
         end_poll_processor(user, bot, update)
 
 
-def get_etherium_wallet():
-    # Заглушка. Нужно запилить создание кошеля
-    # возвращает etherium wallet
-    return 'eth_wallet_string'
+def get_etherium_wallet(password):
+    return web3.personal.newAccount(password)
 
 
-def save_answers(etherium_wallet, questions_answers):
-    # questions_answers - массив, каждый элемент которого { q: string, a: string }
+def save_answers(ethereum_wallet, questions_answers):
+    # questions_answers - массив, каждый элемент которого { 'q': string, 'a': string }
     return 'transaction_hash_string'
 
 
 def get_answers(transaction_hash):
     # вытаскивает ответы по хэшу транзакции в первозданном виде
+
     return 'answers from blockchain'

@@ -12,7 +12,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-updater = Updater(token='475545145:AAHtSa3WTcR0je3rQK76kS_wlrYsOiWBKas')
+updater = Updater(token='472437427:AAEIl5znA-bTNMVlTkNIm1mKs8jmN7z80Kg')
 dispatcher = updater.dispatcher
 
 users_repo = MongoRepository('users')

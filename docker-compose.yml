@@ -5,10 +5,14 @@ services:
     image: bchquiz_web:latest
     container_name: bchquiz_web
     command: gunicorn -b 0.0.0.0:5000 --capture-output --error-logfile - --access-logfile - --workers 1 initialization:app
+#    command: python3 eth_interface.py
     ports:
       - "5000:5000"
     links:
-      - mongo
+#     - mongo
+      - ethereum_node
+    networks:
+      - internal
 
   bchquiz_bot:
     image: bchquiz_bot:latest
@@ -18,9 +22,24 @@ services:
       - "5001:5001"
     links:
       - mongo
+    networks:
+      - internal
 
+  ethereum_node:
+    image: ethereum/client-go
+    container_name: bchquiz_node
+    command: --rinkeby --rpc --rpcapi "admin, personal, eth, web3" --rpcaddr 0.0.0.0 --fast --cache=512 --bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303
+    ports:
+      - "8545:8545"
+      - "30303:30303"
+    networks:
+      - internal
 
   mongo:
     image: mongo:latest
     container_name: bchquiz_mongo
+    networks:
+      - internal
 
+networks:
+  internal:
