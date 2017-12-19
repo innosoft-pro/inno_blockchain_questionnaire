@@ -33,18 +33,19 @@ def contacts_processor(user, bot, update):
     first_name = update.message.contact.first_name
     last_name = update.message.contact.last_name
     username = update.message.from_user.username
-    bot.send_message(chat_id=update.message.chat_id, text="Секундочку, создаем вам etherium кошелек",
+    bot.send_message(chat_id=update.message.chat_id, text="Секундочку, создаем вам ethereum кошелек",
                      reply_markup={'hide_keyboard': True})
-    eth_wallet = get_etherium_wallet()
+    eth_account = get_ethereum_wallet()
     user['phone'] = phone
     user['first_name'] = first_name
     user['last_name'] = last_name
     user['username'] = username
-    user['etherium_wallet'] = eth_wallet
+    user['ethereum_wallet'] = eth_account[0]
+    user['ethereum_password'] = eth_account[1]
     user['ratings'] = []
     user['state'] = 'on_polls_main_menu'
     user = users_repo.update(user)
-    bot.send_message(chat_id=update.message.chat_id, text="Вам создан etherium кошелек " + eth_wallet)
+    bot.send_message(chat_id=update.message.chat_id, text="Вам создан ethereum кошелек " + eth_account[0])
     main_menu_processor(user, bot, update)
 
 
@@ -209,7 +210,7 @@ def poll_processor(user, bot, update):
                          reply_markup={'hide_keyboard': True})
 
         q_a = [{'q': answer['question_text'], 'a': answer['answer']} for answer in user['current_questions_answers']]
-        transaction_hash = save_answers(user['etherium_wallet'], q_a)
+        transaction_hash = save_answers(user['ethereum_wallet'], user['ethereum_password'], q_a)
 
         answers_repo.insert({
             'poll_id': str(poll['_id']),
@@ -414,13 +415,13 @@ def rating_processor(user, bot, update):
         end_poll_processor(user, bot, update)
 
 
-def get_etherium_wallet():
+def get_ethereum_wallet():
     # Заглушка. Нужно запилить создание кошеля
-    # возвращает etherium wallet
-    return 'eth_wallet_string'
+    # возвращает ethereum wallet
+    return ('eth_wallet_string', 'eth_wallet_password')
 
 
-def save_answers(etherium_wallet, questions_answers):
+def save_answers(ethereum_wallet, eth_password, questions_answers):
     # questions_answers - массив, каждый элемент которого { q: string, a: string }
     return 'transaction_hash_string'
 
