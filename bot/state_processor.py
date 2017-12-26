@@ -146,6 +146,10 @@ def archive_poll_menu_processor(user, bot, update):
 def poll_start_processor(user, bot, update):
     poll = polls_repo.find_one({'_id': ObjectId(user['current_poll'])})
     question = poll['questions'][0]
+    if poll.get('welcome_message'):
+        bot.send_message(chat_id=update.message.chat_id,
+                         text= poll['welcome_message'],
+                         reply_markup={'hide_keyboard': True})
     bot.send_message(chat_id=update.message.chat_id,
                      text='Сейчас вам будут задаваться вопросы.',
                      reply_markup={'hide_keyboard': True})
@@ -177,13 +181,43 @@ def poll_processor(user, bot, update):
             'answer': update.message.text
         })
         user = users_repo.update(user)
-    elif current_question['type'] in ['select', 'multiselect']:
+    elif current_question['type'] == 'select':
         if update.message.text in current_question['options']:
             user['current_questions_answers'].append({
                 'question_text': current_question['text'],
                 'type': current_question['text'],
                 'answer': update.message.text
             })
+            user = users_repo.update(user)
+        else:
+            bot.send_message(chat_id=update.message.chat_id,
+                             text='Выберите одну из опций',
+                             reply_markup={'hide_keyboard': True})
+    elif current_question['type'] == 'multiselect':
+        if update.message.text in current_question['options']:
+            user['current_questions_answers'].append({
+                'question_text': current_question['text'],
+                'type': current_question['text'],
+                'answer': update.message.text,
+                'likes': 0,
+                'dislikes': 0
+            })
+        elif update.message.text == 'Свой вариант':
+            user['on_own_answer'] = True
+            user = users_repo.update(user)
+            bot.send_message(chat_id=update.message.chat_id,
+                             text='Напишите свой вариант ответа',
+                             reply_markup={'hide_keyboard': True})
+            return
+        elif user.get('on_own_answer'):
+            user['current_questions_answers'].append({
+                'question_text': current_question['text'],
+                'type': current_question['type'],
+                'likes': 0,
+                'dislikes': 0,
+                'answer': update.message.text,
+            })
+            user['on_own_answer'] = False
             user = users_repo.update(user)
         else:
             bot.send_message(chat_id=update.message.chat_id,
@@ -196,10 +230,19 @@ def poll_processor(user, bot, update):
             bot.send_message(chat_id=update.message.chat_id,
                              text=question['text'],
                              reply_markup={'hide_keyboard': True})
-        elif question['type'] in ['select', 'multiselect']:
+        elif question['type'] == 'select':
             button_list = []
             for option in question['options']:
                 button_list.append(KeyboardButton(option))
+            reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
+            bot.send_message(chat_id=update.message.chat_id,
+                             text=question['text'],
+                             reply_markup=reply_markup)
+        elif question['type'] == 'multiselect':
+            button_list = []
+            for option in question['options']:
+                button_list.append(KeyboardButton(option))
+            button_list.append('Свой вариант')
             reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
             bot.send_message(chat_id=update.message.chat_id,
                              text=question['text'],

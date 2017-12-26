@@ -1,7 +1,6 @@
 import json
 import logging
 from functools import wraps
-from flask import Flask
 
 from flask import Blueprint, jsonify
 from flask import request, Response, render_template
@@ -45,9 +44,11 @@ def requires_auth(f):
 def index():
     return render_template('index.html')
 
+
 @api_blueprint.route('/<path:path>', methods=['GET'])
 def any_root_path(path):
     return render_template('index.html')
+
 
 @api_blueprint.route('/api/version', methods=['GET'])
 @requires_auth
