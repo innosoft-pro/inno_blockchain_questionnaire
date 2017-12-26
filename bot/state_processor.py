@@ -375,7 +375,7 @@ def rating_start_processor(user, bot, update):
     all_questions = []
     for answer in other_answers_cursor:
         for q_a in answer['answers']:
-            if q_a['type'] == 'open':
+            if q_a['type'] in ['open', 'multiselect']:
                 all_questions.append({
                     'answer_id': answer['_id'],
                     'question': q_a['question_text'],
