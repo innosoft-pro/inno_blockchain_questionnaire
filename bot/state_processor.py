@@ -202,6 +202,7 @@ def poll_processor(user, bot, update):
                 'likes': 0,
                 'dislikes': 0
             })
+            user = users_repo.update(user)
         elif update.message.text == 'Свой вариант':
             user['on_own_answer'] = True
             user = users_repo.update(user)

@@ -26,6 +26,14 @@ def start(bot, update):
             'telegram_id': update.message.chat_id,
             'state': 'new'
         })
+    elif user['state'] == 'not_approved':
+        pass
+    else:
+        user['state'] = 'on_polls_main_menu'
+        user['current_poll'] = None
+        user['current_questions_answers'] = []
+        user = users_repo.update(user)
+
     all_states_handler(user, bot, update)
 
 
