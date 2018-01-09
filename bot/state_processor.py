@@ -1,5 +1,8 @@
 import logging
 import random
+from web3 import Web3, HTTPProvider, TestRPCProvider
+from solc import compile_source
+from web3.contract import ConciseContract
 
 import uuid
 from bson.objectid import ObjectId
@@ -13,6 +16,7 @@ users_repo = MongoRepository('users')
 polls_repo = MongoRepository('polls')
 answers_repo = MongoRepository('answers')
 logger = logging.getLogger(__name__)
+# web3 = Web3(HTTPProvider('http://ethereum_node:8545'))
 
 QUESTIONS_TO_RATE = 10
 
@@ -417,13 +421,24 @@ def rating_processor(user, bot, update):
 
 
 def get_ethereum_wallet():
-    # Заглушка. Нужно запилить создание кошеля
-    # возвращает ethereum wallet
-    return ('eth_wallet_string', 'eth_wallet_password')
+    eth_pass = str(uuid.uuid4())
+    eth_account = web3.personal.newAccount(eth_pass)
+    return eth_account, eth_pass
 
 
 def save_answers(ethereum_wallet, eth_password, questions_answers):
     # questions_answers - массив, каждый элемент которого { q: string, a: string }
+    # [
+    #     {
+    #         'q':'как дела?',
+    #         'a': 'хорошо'
+    #     },
+    #     {
+    #         'q':'точно?',
+    #         'a': 'нет'
+    #     }
+    # ]
+    web3.
     return 'transaction_hash_string'
 
 

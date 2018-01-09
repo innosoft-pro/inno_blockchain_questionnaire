@@ -30,7 +30,7 @@ class ContractHandler:
         print(self.contractPC_address)
         print(self.contractPoll_address)
         self.polls = dict()
-        self.polls['testCryptoRF'] = self.contractPoll
+        self.polls['CryptoRF'] = self.contractPoll
         newPollFilter = self.contractPC.on('PollCreated',
                                            {'address': self.contractPC_address },
                                            self.pollCreated)
