@@ -22,7 +22,7 @@ export default decl({
             {this.props.children}
           </Content>
           <Footer className="Footer">
-            <a target="_blank" rel="noopener noreferrer" href="http://innosoft.pro">©&nbsp;Innosoft, 2017</a>
+            <a target="_blank" rel="noopener noreferrer" href="https://innosoft.pro">©&nbsp;Innosoft, 2018</a>
           </Footer>
         </Layout>
       </Loading>
