@@ -1,9 +1,8 @@
 Usage:
 - Delete old docker containers from this project (for first run)
-- `cd srv && sh run_server.sh`
-- Change server's url in `client/src/index.js`
-- `cd ../client`
-- `npm install`
+- Execute `sh run_all.sh`
+- Change server's url in `client/src/index.js` to `localhost:3000` or something else
+- Execute `npm install`
 - For development environment: `npm run start`, browser`s page with project's SPA will be opened automatically
 - For production environment: `npm run build`, all project files will be builded and can be found in `client/build` folder
 - In login page you can use default login credentials
