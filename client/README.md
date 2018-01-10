@@ -1,5 +1,5 @@
 Usage:
-- Delete old docker containers from this project (for first run)
+- Delete old docker containers from this project (for first run) by executing `docker-compose -f "docker-compose.yml" -p "bchquiz_system-latest" down -v`
 - Execute `sh run_all.sh`
 - Change server's url in `client/src/index.js` to `localhost:3000` or something else
 - Execute `npm install`
