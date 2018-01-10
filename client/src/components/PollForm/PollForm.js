@@ -174,6 +174,16 @@ export default decl({
               ]
             })(<Input required={true} placeholder="Poll name"/>)}
           </FormItem>
+          <FormItem label="Welcome message" required={true} {...formItemLayout}>
+              {getFieldDecorator("welcome_message", {
+                  rules: [
+                      {
+                          required: true,
+                          message: "Please input welcome message!"
+                      }
+                  ]
+              })(<Input required={true} placeholder="Greeting message"/>)}
+          </FormItem>
           <FormItem label="Participants" {...formItemLayout}>
             {getFieldDecorator("participants", {})(<Select mode="tags" placeholder="Participants"/>)}
           </FormItem>
@@ -225,6 +235,7 @@ export default decl({
     mapPropsToFields({poll}) {
       let props = {
         name: Form.createFormField({value: poll.name}),
+          welcome_message: Form.createFormField({value: poll.welcome_message}),
         participants: Form.createFormField({
           value: poll
             .participants
