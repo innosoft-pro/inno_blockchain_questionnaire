@@ -164,7 +164,7 @@ export default decl({
 
     var extra = poll._id && (<ButtonGroup>
       <Button href={"/answers?poll_id="+poll._id} target="_blank" type="primary" icon="dot-chart">View answers</Button>
-      <Button href={"/download?poll_id="+poll._id} target="_blank" type="primary" icon="download" type="dashed">Download answers</Button>
+      <Button href={"/download?poll_id="+poll._id} target="_blank" icon="download" type="dashed">Download answers</Button>
     </ButtonGroup>);
 
     return (
