@@ -14,7 +14,7 @@ const Question = types.model("Question", {
 const Poll = types.model("Poll", {
     _id: types.maybe(types.string),
     name: types.string,
-    welcome_message: types.string,
+    welcome_message: types.maybe(types.string, ""),
     archived: types.boolean,
     participants: types.array(types.string),
     questions: types.array(Question)
