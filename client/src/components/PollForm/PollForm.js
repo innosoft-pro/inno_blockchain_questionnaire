@@ -14,6 +14,7 @@ import {
 
 const FormItem = Form.Item;
 const Option = Select.Option;
+const ButtonGroup = Button.Group;
 const {TextArea} = Input;
 
 export default decl({
@@ -161,8 +162,13 @@ export default decl({
 
     getFieldDecorator('_id');
 
+    var extra = poll._id && (<ButtonGroup>
+      <Button href={"/answers?poll_id="+poll._id} target="_blank" type="primary" icon="dot-chart">View answers</Button>
+      <Button href={"/download?poll_id="+poll._id} target="_blank" type="primary" icon="download" type="dashed">Download answers</Button>
+    </ButtonGroup>);
+
     return (
-      <Card className="Card" title={title}>
+      <Card className="Card" title={title} extra={extra}>
         <Form onSubmit={this.handleSubmit} className="login-form">
           <FormItem label="Poll Name" required={true} {...formItemLayout}>
             {getFieldDecorator("name", {
