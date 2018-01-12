@@ -14,6 +14,7 @@ import {
 
 const FormItem = Form.Item;
 const Option = Select.Option;
+const ButtonGroup = Button.Group;
 const {TextArea} = Input;
 
 export default decl({
@@ -161,8 +162,13 @@ export default decl({
 
     getFieldDecorator('_id');
 
+    var extra = poll._id && (<ButtonGroup>
+      <Button href={"/answers?poll_id="+poll._id} target="_blank" type="primary" icon="dot-chart">View answers</Button>
+      <Button href={"/download?poll_id="+poll._id} target="_blank" icon="download" type="dashed">Download answers</Button>
+    </ButtonGroup>);
+
     return (
-      <Card className="Card" title={title}>
+      <Card className="Card" title={title} extra={extra}>
         <Form onSubmit={this.handleSubmit} className="login-form">
           <FormItem label="Poll Name" required={true} {...formItemLayout}>
             {getFieldDecorator("name", {
@@ -173,6 +179,16 @@ export default decl({
                 }
               ]
             })(<Input required={true} placeholder="Poll name"/>)}
+          </FormItem>
+          <FormItem label="Welcome message" required={true} {...formItemLayout}>
+              {getFieldDecorator("welcome_message", {
+                  rules: [
+                      {
+                          required: true,
+                          message: "Please input welcome message!"
+                      }
+                  ]
+              })(<Input required={true} placeholder="Greeting message"/>)}
           </FormItem>
           <FormItem label="Participants" {...formItemLayout}>
             {getFieldDecorator("participants", {})(<Select mode="tags" placeholder="Participants"/>)}
@@ -225,6 +241,7 @@ export default decl({
     mapPropsToFields({poll}) {
       let props = {
         name: Form.createFormField({value: poll.name}),
+          welcome_message: Form.createFormField({value: poll.welcome_message}),
         participants: Form.createFormField({
           value: poll
             .participants

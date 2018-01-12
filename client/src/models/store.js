@@ -14,6 +14,7 @@ const Question = types.model("Question", {
 const Poll = types.model("Poll", {
     _id: types.maybe(types.string),
     name: types.string,
+    welcome_message: types.maybe(types.string, ""),
     archived: types.boolean,
     participants: types.array(types.string),
     questions: types.array(Question)
@@ -33,7 +34,7 @@ export const Store = types.model("Store", {
         const poll = self
             .polls
             .find(poll => poll._id === id);
-        return poll || Poll.create({name: '', archived: false, participants: [], questions: []});
+        return poll || Poll.create({name: '', welcome_message: '', archived: false, participants: [], questions: []});
     }
 
     function markLoading(loading) {
@@ -46,6 +47,7 @@ export const Store = types.model("Store", {
             .findIndex(poll => poll._id === values._id);
         if (index >= 0) {
             self.polls[index].name = values.name;
+            self.polls[index].welcome_message = values.welcome_message;
             self.polls[index].participants = values.participants;
             self.polls[index].archived = values.archived;
             self.polls[index].questions = values.questions;
@@ -62,6 +64,7 @@ export const Store = types.model("Store", {
             const payload = {
                 archived: values.archived,
                 name: values.name,
+                welcome_message: values.welcome_message,
                 participants: values.participants,
                 questions: values.questions || [],
             };
