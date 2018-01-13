@@ -432,8 +432,8 @@ def rating_processor(user, bot, update):
         question_to_rate = next(
             question for question in current_ratings_record['questions'] if not question.get('rate'))
         button_list = [
-            KeyboardButton("+1"),
-            KeyboardButton("-1")
+            KeyboardButton('+1'),
+            KeyboardButton('-1')
         ]
         reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
         bot.send_message(chat_id=update.message.chat_id,

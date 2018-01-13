@@ -1,5 +1,6 @@
 import json
 import logging
+from collections import OrderedDict
 from functools import wraps
 
 from flask import Blueprint, jsonify
@@ -10,6 +11,7 @@ from mongo_repository import MongoRepository
 api_blueprint = Blueprint('api', __name__)
 
 polls_repo = MongoRepository('polls')
+answers_repo = MongoRepository('answers')
 
 logger = logging.getLogger(__name__)
 
@@ -90,3 +92,84 @@ def get_polls():
         'polls': result,
         'error': None
     })
+
+
+@api_blueprint.route('/api/answers', methods=['GET'])
+@requires_auth
+def get_answers():
+    poll_id = request.args.get('poll_id')
+    if not poll_id:
+        return jsonify({
+            'answers': [],
+            'error': 'No poll id provided'
+        })
+
+    answer_records = answers_repo.get_cursor({'poll_id': poll_id})
+    poll = polls_repo.find_one({'_id': poll_id})
+
+    result = OrderedDict()
+    result['participants'] = len(answer_records)
+    result['poll_name'] = poll['name']
+
+    for record in answer_records:
+        for answer in record['answers']:
+            if answer['type'] in ['select', 'multiselect']:
+                if not result.get(answer['question_text']):
+
+                    result[answer['question_text']] = {
+                        'type': answer['type'],
+                        'answers': {
+                            {answer['answer']: 1}
+                        }
+                    }
+                elif not result[answer['question_text']].get(answer['answer']):
+                    result[answer['question_text']]['answers'][answer['answer']] = 1
+                else:
+                    result[answer['question_text']]['answers'][answer['answer']] += 1
+            elif answer['type'] == 'open':
+                if not result.get(answer['question_text']):
+                    result[answer['question_text']] = {
+                        'type': answer['type'],
+                        'answers': {
+                            {
+                                answer['answer']: {
+                                    'likes': answer['likes'],
+                                    'dislikes': answer['dislikes']
+                                }
+                            }
+                        }
+                    }
+                else:
+                    result[answer['question_text']]['answers'][answer['answer']] = {
+                        'likes': answer['likes'],
+                        'dislikes': answer['dislikes']
+                    }
+
+    return jsonify({
+        'polls': result,
+        'error': None
+    })
+
+
+def generate_answer_str_from_dict_result(result):
+    str = ''
+    str += 'Опрос ' + result['poll_name'] + '\n'
+    str += 'Участников: ' + result['participants'] + '\n'
+    str += '\n'
+    for q, q_data in result['answers'].items():
+        if q_data['type'] in ['select', 'multiselect']:
+            str += 'Вопрос: ' + q + '(с выбором вариантов)\n'
+            total_answers = 0
+            for k, v in q_data['answers'].items():
+                total_answers += v
+            for answ, num in q_data['answers'].items():
+                str += '\t' + answ + ' - ' + round(num, 1) + '% (' + num + ' голос)\n'
+            str += '\n'
+        elif q_data['type'] == 'open':
+            str += 'Вопрос: ' + q + '(открытый)\n'
+            for answ, likes_data in q_data['answers'].items():
+                str += '\t' + answ + ' - ' + '(лайков - ' + likes_data['likes'] + ', дизлайков - ' + likes_data[
+                    'dislikes'] + ')\n'
+            str += '\n'
+    str += 'Итого: ' + (result['participants']) + ' участников\n'
+    return str
