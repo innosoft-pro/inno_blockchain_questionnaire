@@ -1,9 +1,8 @@
 Usage:
-- Delete old docker containers from this project (for first run)
-- `cd srv && sh run_server.sh`
-- Change server's url in `client/src/index.js`
-- `cd ../client`
-- `npm install`
+- Delete old docker containers from this project (for first run) by executing `docker-compose -f "docker-compose.yml" -p "bchquiz_system-latest" down -v`
+- Execute `sh run_all.sh`
+- Change server's url in `client/src/index.js` to `http://localhost:5000/api/` or something else
+- Execute `npm install`
 - For development environment: `npm run start`, browser`s page with project's SPA will be opened automatically
 - For production environment: `npm run build`, all project files will be builded and can be found in `client/build` folder
 - In login page you can use default login credentials
