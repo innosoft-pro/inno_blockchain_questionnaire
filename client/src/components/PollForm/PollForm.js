@@ -163,8 +163,8 @@ export default decl({
     getFieldDecorator('_id');
 
     var extra = poll._id && (<ButtonGroup>
-      <Button href={"/answers?poll_id="+poll._id} target="_blank" type="primary" icon="dot-chart">View answers</Button>
-      <Button href={"/download?poll_id="+poll._id} target="_blank" icon="download" type="dashed">Download answers</Button>
+      <Button href={"http://localhost:5000/api/answers?poll_id="+poll._id} target="_blank" type="primary" icon="dot-chart">View answers</Button>
+      <Button href={"http://localhost:5000/api/download?poll_id="+poll._id} target="_blank" icon="download" type="dashed">Download answers</Button>
     </ButtonGroup>);
 
     return (
