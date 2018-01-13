@@ -168,7 +168,7 @@ def generate_answer_str_from_dict_result(result):
             for k, v in q_data['answers'].items():
                 total_answers += v
             for answ, num in q_data['answers'].items():
-                answer_str += '\t' + answ + ' - ' + str(round(num, 1)) + '% (' + str(num) + ' голос)\n'
+                answer_str += '\t' + answ + ' - ' + str(round(num/total_answers, 1)) + '% (' + str(num) + ' голос)\n'
             answer_str += '\n'
         elif q_data['type'] == 'open':
             answer_str += 'Вопрос: ' + q + '(открытый)\n'
