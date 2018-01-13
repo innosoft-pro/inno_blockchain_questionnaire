@@ -3,8 +3,8 @@ import logging
 from collections import OrderedDict
 from functools import wraps
 
-from flask import Blueprint, jsonify
-from flask import request, Response, render_template
+from bson.objectid import ObjectId
+from flask import Blueprint, jsonify, request, Response, render_template
 
 from mongo_repository import MongoRepository
 
@@ -97,79 +97,84 @@ def get_polls():
 @api_blueprint.route('/api/answers', methods=['GET'])
 @requires_auth
 def get_answers():
-    poll_id = request.args.get('poll_id')
-    if not poll_id:
-        return jsonify({
-            'answers': [],
-            'error': 'No poll id provided'
-        })
+    try:
+        poll_id = request.args.get('poll_id')
+        if not poll_id:
+            return jsonify({
+                'answers': [],
+                'error': 'No poll id provided'
+            })
 
-    answer_records = answers_repo.get_cursor({'poll_id': poll_id})
-    poll = polls_repo.find_one({'_id': poll_id})
+        answer_records = answers_repo.get_cursor({'poll_id': poll_id})
+        poll = polls_repo.find_one({'_id': ObjectId(poll_id)})
 
-    result = OrderedDict()
-    result['participants'] = len(answer_records)
-    result['poll_name'] = poll['name']
+        result = {
+            'participants': answer_records.count(),
+            'poll_name': poll['name'],
+            'answers': OrderedDict()
+        }
+        for record in answer_records:
+            for answer in record['answers']:
+                if answer['type'] in ['select', 'multiselect']:
+                    if not result['answers'].get(answer['question_text']):
 
-    for record in answer_records:
-        for answer in record['answers']:
-            if answer['type'] in ['select', 'multiselect']:
-                if not result.get(answer['question_text']):
-
-                    result[answer['question_text']] = {
-                        'type': answer['type'],
-                        'answers': {
-                            {answer['answer']: 1}
+                        result['answers'][answer['question_text']] = {
+                            'type': answer['type'],
+                            'answers':
+                                {answer['answer']: 1}
                         }
-                    }
-                elif not result[answer['question_text']].get(answer['answer']):
-                    result[answer['question_text']]['answers'][answer['answer']] = 1
-                else:
-                    result[answer['question_text']]['answers'][answer['answer']] += 1
-            elif answer['type'] == 'open':
-                if not result.get(answer['question_text']):
-                    result[answer['question_text']] = {
-                        'type': answer['type'],
-                        'answers': {
-                            {
+                    elif not result['answers'][answer['question_text']].get(answer['answer']):
+                        result['answers'][answer['question_text']]['answers'][answer['answer']] = 1
+                    else:
+                        result['answers'][answer['question_text']]['answers'][answer['answer']] += 1
+                elif answer['type'] == 'open':
+                    if not result['answers'].get(answer['question_text']):
+                        result['answers'][answer['question_text']] = {
+                            'type': answer['type'],
+                            'answers': {
                                 answer['answer']: {
                                     'likes': answer['likes'],
                                     'dislikes': answer['dislikes']
                                 }
                             }
                         }
-                    }
-                else:
-                    result[answer['question_text']]['answers'][answer['answer']] = {
-                        'likes': answer['likes'],
-                        'dislikes': answer['dislikes']
-                    }
+                    else:
+                        result['answers'][answer['question_text']]['answers'][answer['answer']] = {
+                            'likes': answer['likes'],
+                            'dislikes': answer['dislikes']
+                        }
 
-    return jsonify({
-        'polls': result,
-        'error': None
-    })
+        return jsonify({
+            'answers': generate_answer_str_from_dict_result(result),
+            'error': None
+        })
+    except Exception as e:
+        logger.exception('Error in /answers')
+        return jsonify({
+            'answers': [],
+            'error': str(e)
+        })
 
 
 def generate_answer_str_from_dict_result(result):
-    str = ''
-    str += 'Опрос ' + result['poll_name'] + '\n'
-    str += 'Участников: ' + result['participants'] + '\n'
-    str += '\n'
+    answer_str = ''
+    answer_str += 'Опрос ' + result['poll_name'] + '\n'
+    answer_str += 'Участников: ' + str(result['participants']) + '\n'
+    answer_str += '\n'
     for q, q_data in result['answers'].items():
         if q_data['type'] in ['select', 'multiselect']:
-            str += 'Вопрос: ' + q + '(с выбором вариантов)\n'
+            answer_str += 'Вопрос: ' + q + '(с выбором вариантов)\n'
             total_answers = 0
             for k, v in q_data['answers'].items():
                 total_answers += v
             for answ, num in q_data['answers'].items():
-                str += '\t' + answ + ' - ' + round(num, 1) + '% (' + num + ' голос)\n'
-            str += '\n'
+                answer_str += '\t' + answ + ' - ' + str(round(num, 1)) + '% (' + str(num) + ' голос)\n'
+            answer_str += '\n'
         elif q_data['type'] == 'open':
-            str += 'Вопрос: ' + q + '(открытый)\n'
+            answer_str += 'Вопрос: ' + q + '(открытый)\n'
             for answ, likes_data in q_data['answers'].items():
-                str += '\t' + answ + ' - ' + '(лайков - ' + likes_data['likes'] + ', дизлайков - ' + likes_data[
-                    'dislikes'] + ')\n'
-            str += '\n'
-    str += 'Итого: ' + (result['participants']) + ' участников\n'
-    return str
+                answer_str += '\t' + answ + ' - ' + '(лайков - ' + str(likes_data['likes']) + ', дизлайков - ' + str(
+                    likes_data[
+                        'dislikes']) + ')\n'
+            answer_str += '\n'
+    return answer_str
