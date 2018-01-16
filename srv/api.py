@@ -1,3 +1,4 @@
+import io
 import json
 import logging
 from collections import OrderedDict
@@ -5,6 +6,7 @@ from functools import wraps
 
 from bson.objectid import ObjectId
 from flask import Blueprint, jsonify, request, Response, render_template
+from flask import send_file
 
 from mongo_repository import MongoRepository
 
@@ -105,44 +107,7 @@ def get_answers():
                 'error': 'No poll id provided'
             })
 
-        answer_records = answers_repo.get_cursor({'poll_id': poll_id})
-        poll = polls_repo.find_one({'_id': ObjectId(poll_id)})
-
-        result = {
-            'participants': answer_records.count(),
-            'poll_name': poll['name'],
-            'answers': OrderedDict()
-        }
-        for record in answer_records:
-            for answer in record['answers']:
-                if answer['type'] in ['select', 'multiselect']:
-                    if not result['answers'].get(answer['question_text']):
-
-                        result['answers'][answer['question_text']] = {
-                            'type': answer['type'],
-                            'answers':
-                                {answer['answer']: 1}
-                        }
-                    elif not result['answers'][answer['question_text']].get(answer['answer']):
-                        result['answers'][answer['question_text']]['answers'][answer['answer']] = 1
-                    else:
-                        result['answers'][answer['question_text']]['answers'][answer['answer']] += 1
-                elif answer['type'] == 'open':
-                    if not result['answers'].get(answer['question_text']):
-                        result['answers'][answer['question_text']] = {
-                            'type': answer['type'],
-                            'answers': {
-                                answer['answer']: {
-                                    'likes': answer['likes'],
-                                    'dislikes': answer['dislikes']
-                                }
-                            }
-                        }
-                    else:
-                        result['answers'][answer['question_text']]['answers'][answer['answer']] = {
-                            'likes': answer['likes'],
-                            'dislikes': answer['dislikes']
-                        }
+        result = get_poll_results(poll_id)
 
         return jsonify({
             'answers': generate_answer_str_from_dict_result(result),
@@ -156,9 +121,73 @@ def get_answers():
         })
 
 
+@api_blueprint.route('/api/download', methods=['GET'])
+@requires_auth
+def download_answers():
+    try:
+        poll_id = request.args.get('poll_id')
+        if not poll_id:
+            return jsonify({
+                'answers': [],
+                'error': 'No poll id provided'
+            })
+
+        result = get_poll_results(poll_id)
+
+        return send_file(generate_file_from_result(result), mimetype='text/csv', attachment_filename='answers.csv',
+                         as_attachment=True)
+    except Exception as e:
+        logger.exception('Error in /download')
+        return jsonify({
+            'error': str(e)
+        })
+
+
+def get_poll_results(poll_id):
+    answer_records = answers_repo.get_cursor({'poll_id': poll_id})
+    poll = polls_repo.find_one({'_id': ObjectId(poll_id)})
+
+    result = {
+        'participants': answer_records.count(),
+        'poll_name': poll['name'],
+        'answers': OrderedDict()
+    }
+    for record in answer_records:
+        for answer in record['answers']:
+            if answer['type'] in ['select', 'multiselect']:
+                if not result['answers'].get(answer['question_text']):
+
+                    result['answers'][answer['question_text']] = {
+                        'type': answer['type'],
+                        'answers':
+                            {answer['answer']: 1}
+                    }
+                elif not result['answers'][answer['question_text']].get(answer['answer']):
+                    result['answers'][answer['question_text']]['answers'][answer['answer']] = 1
+                else:
+                    result['answers'][answer['question_text']]['answers'][answer['answer']] += 1
+            elif answer['type'] == 'open':
+                if not result['answers'].get(answer['question_text']):
+                    result['answers'][answer['question_text']] = {
+                        'type': answer['type'],
+                        'answers': {
+                            answer['answer']: {
+                                'likes': answer['likes'],
+                                'dislikes': answer['dislikes']
+                            }
+                        }
+                    }
+                else:
+                    result['answers'][answer['question_text']]['answers'][answer['answer']] = {
+                        'likes': answer['likes'],
+                        'dislikes': answer['dislikes']
+                    }
+    return result
+
+
 def generate_answer_str_from_dict_result(result):
     answer_str = ''
-    answer_str += 'Опрос ' + result['poll_name'] + '\n'
+    answer_str += 'Опрос: ' + result['poll_name'] + '\n'
     answer_str += 'Участников: ' + str(result['participants']) + '\n'
     answer_str += '\n'
     for q, q_data in result['answers'].items():
@@ -168,7 +197,8 @@ def generate_answer_str_from_dict_result(result):
             for k, v in q_data['answers'].items():
                 total_answers += v
             for answ, num in q_data['answers'].items():
-                answer_str += '\t' + answ + ' - ' + str(round(num/total_answers, 1)) + '% (' + str(num) + ' голос)\n'
+                answer_str += '\t' + answ + ' - ' + str(round(num * 100 / total_answers, 1)) + '% (' + str(
+                    num) + ' голос)\n'
             answer_str += '\n'
         elif q_data['type'] == 'open':
             answer_str += 'Вопрос: ' + q + '(открытый)\n'
@@ -178,3 +208,31 @@ def generate_answer_str_from_dict_result(result):
                         'dislikes']) + ')\n'
             answer_str += '\n'
     return answer_str
+
+
+def generate_file_from_result(result):
+    pass
+    file_str = ''
+    title = '{}\n'.format(result['poll_name'])
+    participants = 'Участников:;{}\n'.format(result['participants'])
+    table_line = '{};{};{};{};{};{};{};\n'
+    table_header = table_line.format('Название вопроса', 'Тип вопроса', 'Ответы', 'Проценты', 'Количество голосов',
+                                     'Лайков', 'Дизлайков')
+    file_str += title + participants + table_header
+    for q, q_data in result['answers'].items():
+        if q_data['type'] in ['select', 'multiselect']:
+            file_str += table_line.format(q, 'С выбором вариантов', '', '', '', '', '')
+            total_answers = 0
+            for k, v in q_data['answers'].items():
+                total_answers += v
+            for answ, num in q_data['answers'].items():
+                file_str += table_line.format('', '', answ, round(num * 100 / total_answers, 1), num, '', '')
+        elif q_data['type'] == 'open':
+            file_str += table_line.format(q, 'Открытый', '', '', '', '', '')
+            for answ, likes_data in q_data['answers'].items():
+                file_str += table_line.format('', '', answ, '', '', likes_data['likes'], likes_data['dislikes'])
+    logger.warning(file_str)
+    buffer = io.BytesIO()
+    buffer.write(file_str.encode('utf-8'))
+    buffer.seek(0)
+    return buffer
