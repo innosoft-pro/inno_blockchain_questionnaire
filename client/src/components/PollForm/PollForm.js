@@ -27,6 +27,9 @@ export default decl({
     this.addQuestion = this
       .addQuestion
       .bind(this);
+    this.loadAnswers = this
+      .loadAnswers
+      .bind(this);
   },
 
   addQuestion() {
@@ -74,6 +77,10 @@ export default decl({
       .setFieldsValue({
         ['questions[' + size + '].options']: []
       });
+  },
+
+  loadAnswers() {
+    this.props.onLoadAnswers(this.props.poll._id);
   },
 
   content({poll}) {
@@ -162,64 +169,76 @@ export default decl({
 
     getFieldDecorator('_id');
 
-    var extra = poll._id && (<ButtonGroup>
-      <Button href={"http://localhost:5000/api/answers?poll_id="+poll._id} target="_blank" type="primary" icon="dot-chart">View answers</Button>
-      <Button href={"http://localhost:5000/api/download?poll_id="+poll._id} target="_blank" icon="download" type="dashed">Download answers</Button>
-    </ButtonGroup>);
+    var extra = poll._id && (
+      <ButtonGroup>
+        <Button type="primary" icon="dot-chart" onClick={this.loadAnswers}>View answers</Button>
+        <Button
+          /*href={"http://localhost:5000/api/download?poll_id=" + poll._id}*/
+          href={"/api/download?poll_id=" + poll._id}
+          target="_blank"
+          icon="download"
+          type="dashed">Download answers</Button>
+      </ButtonGroup>
+    );
 
     return (
-      <Card className="Card" title={title} extra={extra}>
-        <Form onSubmit={this.handleSubmit} className="login-form">
-          <FormItem label="Poll Name" required={true} {...formItemLayout}>
-            {getFieldDecorator("name", {
-              rules: [
-                {
-                  required: true,
-                  message: "Please input poll name!"
-                }
-              ]
-            })(<Input required={true} placeholder="Poll name"/>)}
-          </FormItem>
-          <FormItem label="Welcome message" required={true} {...formItemLayout}>
+      <div>
+        <Card className="Card" title={title}>
+          <Form onSubmit={this.handleSubmit} className="login-form">
+            <FormItem label="Poll Name" required={true} {...formItemLayout}>
+              {getFieldDecorator("name", {
+                rules: [
+                  {
+                    required: true,
+                    message: "Please input poll name!"
+                  }
+                ]
+              })(<Input required={true} placeholder="Poll name"/>)}
+            </FormItem>
+            <FormItem label="Welcome message" required={true} {...formItemLayout}>
               {getFieldDecorator("welcome_message", {
-                  rules: [
-                      {
-                          required: true,
-                          message: "Please input welcome message!"
-                      }
-                  ]
+                rules: [
+                  {
+                    required: true,
+                    message: "Please input welcome message!"
+                  }
+                ]
               })(<Input required={true} placeholder="Greeting message"/>)}
-          </FormItem>
-          <FormItem label="Participants" {...formItemLayout}>
-            {getFieldDecorator("participants", {})(<Select mode="tags" placeholder="Participants"/>)}
-          </FormItem>
-          <FormItem {...formItemLayout} label="Archived">
-            {getFieldDecorator('archived', {valuePropName: "checked"})(<Switch checkedChildren="yes"/>)}
-          </FormItem>
-          <FormItem>
-            <Table
-              columns={columns}
-              dataSource={questions}
-              bordered
-              title={() => "Questions"}
-              footer={() => (
-              <Button type="primary" size="small" onClick={this.addQuestion}><Icon type="plus"/>
-                Add</Button>
-            )}/>
-          </FormItem>
-          <FormItem>
-            <Button
-              style={{
-              width: "auto"
-            }}
-              type="primary"
-              htmlType="submit"
-              className="login-form-button">
-              Save
-            </Button>
-          </FormItem>
-        </Form>
-      </Card>
+            </FormItem>
+            <FormItem label="Participants" {...formItemLayout}>
+              {getFieldDecorator("participants", {})(<Select mode="tags" placeholder="Participants"/>)}
+            </FormItem>
+            <FormItem {...formItemLayout} label="Archived">
+              {getFieldDecorator('archived', {valuePropName: "checked"})(<Switch checkedChildren="yes"/>)}
+            </FormItem>
+            <FormItem>
+              <Table
+                columns={columns}
+                dataSource={questions}
+                bordered
+                title={() => "Questions"}
+                footer={() => (
+                <Button type="primary" size="small" onClick={this.addQuestion}><Icon type="plus"/>
+                  Add</Button>
+              )}/>
+            </FormItem>
+            <FormItem>
+              <Button
+                style={{
+                width: "auto"
+              }}
+                type="primary"
+                htmlType="submit"
+                className="login-form-button">
+                Save
+              </Button>
+            </FormItem>
+          </Form>
+        </Card>
+        {poll._id && <Card className="Card" title="Answers" extra={extra}>
+          <pre>{poll.answers}</pre>
+        </Card>}
+      </div>
     );
   },
 
@@ -241,7 +260,7 @@ export default decl({
     mapPropsToFields({poll}) {
       let props = {
         name: Form.createFormField({value: poll.name}),
-          welcome_message: Form.createFormField({value: poll.welcome_message}),
+        welcome_message: Form.createFormField({value: poll.welcome_message}),
         participants: Form.createFormField({
           value: poll
             .participants

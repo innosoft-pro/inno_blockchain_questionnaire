@@ -17,7 +17,8 @@ const Poll = types.model("Poll", {
     welcome_message: types.maybe(types.string, ""),
     archived: types.boolean,
     participants: types.array(types.string),
-    questions: types.array(Question)
+    questions: types.array(Question),
+    answers: types.maybe(types.string, "")
 });
 
 export const Store = types.model("Store", {
@@ -132,6 +133,36 @@ export const Store = types.model("Store", {
         self.user.password = '';
     });
 
-    return { postPoll, login, getById, fetchPolls };
+    const loadAnswers = flow(function* loadAnswers(id){
+        markLoading(true);
+        try {
+            const json = yield getEnv(self).fetch('answers?poll_id='+id, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': 'Basic ' + btoa(self.user.name + ':' + self.user.password)
+                  },
+                  mode: 'cors',
+                  method: "GET"
+            });
+            markLoading(false);   
+            if( json ) {
+                if( json.error ) {
+                    getEnv(self).error({
+                        title: "Error",
+                        content: json.error
+                    });
+                } else {
+                    let poll = getById(id);
+                    poll.answers = json.answers;
+                    return true;
+                }
+            }
+        } catch (err) {
+            console.log('error', err);
+        }
+        markLoading(false);
+    });
+
+    return { postPoll, login, getById, fetchPolls, loadAnswers };
 });
 
