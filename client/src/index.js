@@ -17,7 +17,7 @@ import {Modal} from 'antd';
 const browserHistory = createBrowserHistory();
 const routingStore = new RouterStore();
 const fetcher = (url, params) =>  window
-  .fetch( 'http://localhost:5000/api/' + url, params)
+  .fetch( 'http://188.130.155.105:5000/api/' + url, params)
   .then(response => response.json());
 
 const store = Store.create({
