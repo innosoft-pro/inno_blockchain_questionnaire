@@ -185,7 +185,7 @@ def poll_processor(user, bot, update):
         if update.message.text in current_question['options']:
             user['current_questions_answers'].append({
                 'question_text': current_question['text'],
-                'type': current_question['text'],
+                'type': current_question['type'],
                 'answer': update.message.text
             })
             user = users_repo.update(user)
@@ -197,7 +197,7 @@ def poll_processor(user, bot, update):
         if update.message.text in current_question['options']:
             user['current_questions_answers'].append({
                 'question_text': current_question['text'],
-                'type': current_question['text'],
+                'type': current_question['type'],
                 'answer': update.message.text,
                 'likes': 0,
                 'dislikes': 0
