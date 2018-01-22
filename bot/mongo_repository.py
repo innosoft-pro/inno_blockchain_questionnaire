@@ -12,6 +12,7 @@ class MongoRepository:
     collection name in constructor and use its public methods.
     """
 
+
     def __init__(self, collection_name):
         self._db = mongo_db
         self._collection = mongo_db[collection_name]

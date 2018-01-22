@@ -5,6 +5,8 @@ from bson.objectid import ObjectId
 from telegram.keyboardbutton import KeyboardButton
 from telegram.replykeyboardmarkup import ReplyKeyboardMarkup
 
+from contractHandler import ContractHandler
+
 import utils
 from mongo_repository import MongoRepository
 
@@ -35,7 +37,7 @@ def contacts_processor(user, bot, update):
     username = update.message.from_user.username
     bot.send_message(chat_id=update.message.chat_id, text="Секундочку, создаем вам ethereum кошелек",
                      reply_markup={'hide_keyboard': True})
-    eth_account = get_ethereum_wallet()
+    eth_account = get_ethereum_wallet(phone)
     user['phone'] = phone
     user['first_name'] = first_name
     user['last_name'] = last_name
@@ -459,17 +461,21 @@ def rating_processor(user, bot, update):
         end_poll_processor(user, bot, update)
 
 
-def get_ethereum_wallet():
+def get_ethereum_wallet(phone):
     # Заглушка. Нужно запилить создание кошеля
     # возвращает ethereum wallet
-    return ('eth_wallet_string', 'eth_wallet_password')
+    return (phone, 'eth_wallet_password')
 
 
 def save_answers(ethereum_wallet, eth_password, questions_answers):
     # questions_answers - массив, каждый элемент которого { q: string, a: string }
-    return 'transaction_hash_string'
+    contractHandler = ContractHandler()
+    hash = contractHandler.recordAnswers("CryptoRF", ethereum_wallet, str(questions_answers))
+    return hash
 
 
-def get_answers(transaction_hash):
+def get_answers(phone):
     # вытаскивает ответы по хэшу транзакции в первозданном виде
-    return 'answers from blockchain'
+    contractHandler = ContractHandler()
+    answers = contractHandler.getAnswersById("CryptoRF", phone)
+    return answers

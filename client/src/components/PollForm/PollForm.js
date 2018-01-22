@@ -173,7 +173,7 @@ export default decl({
       <ButtonGroup>
         <Button type="primary" icon="dot-chart" onClick={this.loadAnswers}>View answers</Button>
         <Button
-          /*href={"http://localhost:5000/api/download?poll_id=" + poll._id}*/
+          //href={"http://localhost:5000/api/download?poll_id=" + poll._id}
           href={"/api/download?poll_id=" + poll._id}
           target="_blank"
           icon="download"

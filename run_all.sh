@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
-docker build --tag "bchquiz_web:latest" -f ./srv/Dockerfile_back .
-docker build --tag "bchquiz_bot:latest" -f ./bot/Dockerfile_bot .
-docker-compose -f "docker-compose.yml" -p "bchquiz_system-latest" up
+#docker build --tag "bchquiz_web:latest" -f ./srv/Dockerfile .
+#docker build --tag "bchquiz_bot:latest" -f ./bot/Dockerfile .
+#docker-compose -f "docker-compose.yml" -p "innoquiz" up
+docker-compose -p innoquiz up

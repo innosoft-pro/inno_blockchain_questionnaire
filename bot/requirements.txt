@@ -2,3 +2,4 @@ telegram
 requests==2.13.0
 python-telegram-bot
 pymongo==3.4.0
+web3

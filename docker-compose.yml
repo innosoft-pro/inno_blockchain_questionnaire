@@ -1,26 +1,36 @@
-version: '2'
+version: "3"
 
 services:
-  bchquiz_web:
-    image: bchquiz_web:latest
-    container_name: bchquiz_web
-    command: gunicorn -b 0.0.0.0:5000 --capture-output --error-logfile - --access-logfile - --workers 1 initialization:app
+  srv:
+    build: ./srv
+    #image: innoquiz_srv
+    restart: always
     ports:
       - "5000:5000"
-    links:
-      - mongo
 
-  bchquiz_bot:
-    image: bchquiz_bot:latest
-    container_name: bchquiz_bot
-    command: python3 inno_quiz_bot.py
+  bot:
+    build: ./bot
+    image: innoquiz_bot
+    restart: always
     ports:
       - "5001:5001"
-    links:
-      - mongo
 
+  parity:
+    image: parity/parity:v1.8.6
+    restart: always
+    command: --jsonrpc-apis 'eth,web3,personal' --chain kovan --ui-interface all --jsonrpc-hosts all --jsonrpc-interface all --ws-interface all ui --base-path /mnt
+    volumes:
+      - "~/Library/Application\ Support/io.parity.ethereum/:/mnt"
+    ports:
+      - "8545-8546:8545-8546"
+      - "8180:8180"
+      - "30303:30303/udp"
 
   mongo:
     image: mongo:latest
-    container_name: bchquiz_mongo
+    restart: always
+    volumes:
+      - "mongo-data:/data/db"
 
+volumes:
+  mongo-data:

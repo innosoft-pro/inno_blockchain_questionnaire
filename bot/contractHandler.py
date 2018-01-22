@@ -1,5 +1,5 @@
 from time import sleep
-from web3 import Web3, RPCProvider
+from web3 import Web3, HTTPProvider, RPCProvider
 from os import path
 import requests
 import json
@@ -9,7 +9,7 @@ import base64
 class ContractHandler:
     def __init__(self):
         # Load contract configuration
-        self.web3 = Web3(RPCProvider(host='localhost', port='8545'))
+        self.web3 = Web3(RPCProvider(host='parity', port='8545'))
         dir_path = path.dirname(path.realpath(__file__))
         with open(str(path.join(dir_path, 'configuration.txt')), 'r') as configuration:
             for line in configuration:
@@ -53,13 +53,17 @@ class ContractHandler:
     def recordAnswers(self, pollName, id, answer):
         self.web3.personal.unlockAccount(self.main_account, self.main_password)
         ansb64 = base64.b64encode(bytearray(answer, encoding='utf-8'))
-        txAddress = self.polls[pollName].transact({'from': self.main_account}).recordAnswers(id, ansb64)
+        print(answer)
+        print(int(id))
+        print(ansb64)
+        txAddress = self.contractPoll.transact({'from': self.main_account}).recordAnswers(int(id), ansb64)
+        #txAddress = self.polls[pollName].transact({'from': self.main_account}).recordAnswers(id, ansb64)
         return "https://kovan.etherscan.io/tx/" + str(txAddress)
 
 
     def getAnswersById(self, pollName, id):
         self.web3.personal.unlockAccount(self.main_account, self.main_password)
-        ansb64 = self.polls[pollName].call({'from': self.main_account}).getAnswersById(id)
+        ansb64 = self.polls[pollName].call({'from': self.main_account}).getAnswersById(int(id))
 
         return base64.b64decode(ansb64).decode('utf-8')
 
