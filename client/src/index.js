@@ -19,7 +19,7 @@ export const host = window.location.protocol + "//" + window.location.hostname
 const browserHistory = createBrowserHistory();
 const routingStore = new RouterStore();
 const fetcher = (url, params) =>  window
-  .fetch(host + ':5000/api/' + url, params)
+  .fetch(host + ':5002/api/' + url, params)
   .then(response => response.json());
 
 const store = Store.create({
