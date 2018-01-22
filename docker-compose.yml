@@ -10,7 +10,7 @@ services:
 
   bot:
     build: ./bot
-    image: innoquiz_bot
+    #image: innoquiz_bot
     restart: always
     ports:
       - "5001:5001"
@@ -18,7 +18,7 @@ services:
   parity:
     image: parity/parity:v1.8.6
     restart: always
-    command: --jsonrpc-apis 'eth,web3,personal' --chain kovan --ui-interface all --jsonrpc-hosts all --jsonrpc-interface all --ws-interface all ui --base-path /mnt
+    command: --jsonrpc-apis 'eth,web3,personal' --chain kovan --ui-interface all --jsonrpc-cors * --ws-origins all --jsonrpc-hosts all --jsonrpc-interface all --ws-interface all ui --base-path /mnt
     volumes:
       - "~/Library/Application\ Support/io.parity.ethereum/:/mnt"
     ports:
