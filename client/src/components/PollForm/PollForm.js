@@ -217,6 +217,7 @@ export default decl({
                 dataSource={questions}
                 bordered
                 title={() => "Questions"}
+                pagination = {false}
                 footer={() => (
                 <Button type="primary" size="small" onClick={this.addQuestion}><Icon type="plus"/>
                   Add</Button>
