@@ -15,7 +15,7 @@ polls_repo = MongoRepository('polls')
 answers_repo = MongoRepository('answers')
 logger = logging.getLogger(__name__)
 
-QUESTIONS_TO_RATE = 10
+QUESTIONS_TO_RATE = 3
 
 
 def initial_contact_requester(user, bot, update):
@@ -26,7 +26,7 @@ def initial_contact_requester(user, bot, update):
     user['state'] = 'not_approved'
     user = users_repo.update(user)
     bot.send_message(chat_id=update.message.chat_id,
-                     text="Для начала работы пожалуйста поделитесь номером телефона",
+                     text="Для начала работы, пожалуйста, предоставьте профильные данные",
                      reply_markup=reply_markup)
 
 
@@ -35,7 +35,7 @@ def contacts_processor(user, bot, update):
     first_name = update.message.contact.first_name
     last_name = update.message.contact.last_name
     username = update.message.from_user.username
-    bot.send_message(chat_id=update.message.chat_id, text="Секундочку, создаем вам ethereum кошелек",
+    bot.send_message(chat_id=update.message.chat_id, text="Секундочку, создаем вам блокчейн-профиль в сети Ethereum",
                      reply_markup={'hide_keyboard': True})
     eth_account = get_ethereum_wallet(phone)
     user['phone'] = phone
@@ -47,7 +47,7 @@ def contacts_processor(user, bot, update):
     user['ratings'] = []
     user['state'] = 'on_polls_main_menu'
     user = users_repo.update(user)
-    bot.send_message(chat_id=update.message.chat_id, text="Вам создан ethereum кошелек " + eth_account[0])
+    bot.send_message(chat_id=update.message.chat_id, text="Вам создан блокчейн-профиль в Ethereum " + eth_account[0])
     main_menu_processor(user, bot, update)
 
 
@@ -150,7 +150,7 @@ def poll_start_processor(user, bot, update):
     question = poll['questions'][0]
     if poll.get('welcome_message'):
         bot.send_message(chat_id=update.message.chat_id,
-                         text= poll['welcome_message'],
+                         text=poll['welcome_message'],
                          reply_markup={'hide_keyboard': True})
     bot.send_message(chat_id=update.message.chat_id,
                      text='Сейчас вам будут задаваться вопросы.',
@@ -279,7 +279,7 @@ def end_poll_processor(user, bot, update, come_from=None):
     if come_from and come_from == 'start_rating_processor':
         button_list = [
             KeyboardButton("Показать мои ответы"),
-            KeyboardButton("Прорейтинговать ответы других участников"),
+            KeyboardButton("Оценить ответы других участников"),
             KeyboardButton("Вернуться в главное меню")
         ]
         reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
@@ -289,12 +289,12 @@ def end_poll_processor(user, bot, update, come_from=None):
     elif come_from and come_from == 'poll_processor':
         button_list = [
             KeyboardButton("Показать мои ответы"),
-            KeyboardButton("Прорейтинговать ответы других участников"),
+            KeyboardButton("Оценить ответы других участников"),
             KeyboardButton("Вернуться в главное меню")
         ]
         reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
         bot.send_message(chat_id=update.message.chat_id,
-                         text="Опрос пройден успешно!",
+                         text="Опрос пройден успешно! Сейчас вам будут предложены в случайном порядке ответы других участников опроса. Просим вас оценить их ('+1' - согласен; '-1' - не согласен).",
                          reply_markup=reply_markup)
     elif update.message.text == 'Показать мои ответы':
         answers_record = answers_repo.find_one({'poll_id': str(user['current_poll']), 'user_id': str(user['_id'])})
@@ -306,7 +306,7 @@ def end_poll_processor(user, bot, update, come_from=None):
         bot.send_message(chat_id=update.message.chat_id,
                          text=message)
 
-    elif update.message.text == 'Прорейтинговать ответы других участников':
+    elif update.message.text == 'Оценить ответы других участников':
         user['state'] = 'on_rating_start'
         user = users_repo.update(user)
         rating_start_processor(user, bot, update)
@@ -318,7 +318,7 @@ def end_poll_processor(user, bot, update, come_from=None):
     elif poll:
         button_list = [
             KeyboardButton("Показать мои ответы"),
-            KeyboardButton("Прорейтинговать ответы других участников"),
+            KeyboardButton("Оценить ответы других участников"),
             KeyboardButton("Вернуться в главное меню")
         ]
         reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
@@ -328,7 +328,7 @@ def end_poll_processor(user, bot, update, come_from=None):
     else:
         button_list = [
             KeyboardButton("Показать мои ответы"),
-            KeyboardButton("Прорейтинговать ответы других участников"),
+            KeyboardButton("Оценить ответы других участников"),
             KeyboardButton("Вернуться в главное меню")
         ]
         reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
@@ -378,12 +378,14 @@ def rating_start_processor(user, bot, update):
     all_questions = []
     for answer in other_answers_cursor:
         for q_a in answer['answers']:
-            if q_a['type'] in ['open', 'multiselect']:
+            if q_a['type'] in ['open', 'multiselect'] and q_a['question_text'] != 'Укажите ваше ФИО':
                 all_questions.append({
                     'answer_id': answer['_id'],
                     'question': q_a['question_text'],
                     'answer': q_a['answer']
                 })
+
+    random.shuffle(all_questions)
 
     if len(all_questions) <= QUESTIONS_TO_RATE:
         user['ratings'].append({
