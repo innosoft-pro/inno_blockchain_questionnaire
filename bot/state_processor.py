@@ -15,18 +15,18 @@ polls_repo = MongoRepository('polls')
 answers_repo = MongoRepository('answers')
 logger = logging.getLogger(__name__)
 
-QUESTIONS_TO_RATE = 3
+QUESTIONS_TO_RATE = 5
 
 
 def initial_contact_requester(user, bot, update):
     button_list = [
-        KeyboardButton("Поделиться номером телефона", request_contact=True)
+        KeyboardButton("Поделиться данными профиля", request_contact=True)
     ]
     reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
     user['state'] = 'not_approved'
     user = users_repo.update(user)
     bot.send_message(chat_id=update.message.chat_id,
-                     text="Для начала работы, пожалуйста, предоставьте профильные данные",
+                     text="Для начала работы, пожалуйста, предоставьте данные профиля",
                      reply_markup=reply_markup)
 
 
@@ -35,7 +35,7 @@ def contacts_processor(user, bot, update):
     first_name = update.message.contact.first_name
     last_name = update.message.contact.last_name
     username = update.message.from_user.username
-    bot.send_message(chat_id=update.message.chat_id, text="Секундочку, создаем вам блокчейн-профиль в сети Ethereum",
+    bot.send_message(chat_id=update.message.chat_id, text="Секундочку, дождитесь регистрации в нашей системе",
                      reply_markup={'hide_keyboard': True})
     eth_account = get_ethereum_wallet(phone)
     user['phone'] = phone
@@ -47,7 +47,8 @@ def contacts_processor(user, bot, update):
     user['ratings'] = []
     user['state'] = 'on_polls_main_menu'
     user = users_repo.update(user)
-    bot.send_message(chat_id=update.message.chat_id, text="Вам создан блокчейн-профиль в Ethereum " + eth_account[0])
+    bot.send_message(chat_id=update.message.chat_id, text="Поздравляем, " + first_name + ' ' + last_name
+                                                          + ", Вы зарегистрированы как эксперт")
     main_menu_processor(user, bot, update)
 
 
@@ -57,14 +58,14 @@ def main_menu_processor(user, bot, update):
         user = users_repo.update(user)
         active_polls_menu_processor(user, bot, update)
 
-    elif update.message.text == 'Показать архивные опросы':
+    elif update.message.text == 'Показать архив':
         user['state'] = 'on_archive_polls'
         user = users_repo.update(user)
         archive_poll_menu_processor(user, bot, update)
     else:
         button_list = [
             KeyboardButton("Показать активные опросы"),
-            KeyboardButton("Показать архивные опросы")
+            KeyboardButton("Показать архив")
         ]
         reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
         bot.send_message(chat_id=update.message.chat_id,
@@ -252,7 +253,7 @@ def poll_processor(user, bot, update):
                              reply_markup=reply_markup)
     else:
         bot.send_message(chat_id=update.message.chat_id,
-                         text='Секундочку, сохраняем результаты в блокчейн',
+                         text='Секундочку, сохраняем результаты в блокчейн Ethereum',
                          reply_markup={'hide_keyboard': True})
 
         q_a = [{'q': answer['question_text'], 'a': answer['answer']} for answer in user['current_questions_answers']]
@@ -269,7 +270,7 @@ def poll_processor(user, bot, update):
         user['current_questions_answers'] = []
         user = users_repo.update(user)
         bot.send_message(chat_id=update.message.chat_id,
-                         text='Хэш транзакции: ' + transaction_hash,
+                         text='Ссылка на хэш транзакции в сети: ' + transaction_hash,
                          reply_markup={'hide_keyboard': True})
         end_poll_processor(user, bot, update, come_from='poll_processor')
 
@@ -294,8 +295,13 @@ def end_poll_processor(user, bot, update, come_from=None):
         ]
         reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
         bot.send_message(chat_id=update.message.chat_id,
-                         text="Опрос пройден успешно! Сейчас вам будут предложены в случайном порядке ответы других участников опроса. Просим вас оценить их ('+1' - согласен; '-1' - не согласен).",
+                         text="Опрос пройден успешно! Сейчас вам будут предложены в случайном порядке"
+                              " ответы других участников опроса. Просим вас оценить их ('+1' - согласен;"
+                              " '-1' - не согласен).",
                          reply_markup=reply_markup)
+        user['state'] = 'on_rating_start'
+        user = users_repo.update(user)
+        rating_start_processor(user, bot, update)
     elif update.message.text == 'Показать мои ответы':
         answers_record = answers_repo.find_one({'poll_id': str(user['current_poll']), 'user_id': str(user['_id'])})
         message = 'Хэш транзакции: ' + answers_record['hash'] + '\n'
@@ -368,7 +374,7 @@ def rating_start_processor(user, bot, update):
         user['state'] = 'on_poll_end'
         user = users_repo.update(user)
         bot.send_message(chat_id=update.message.chat_id,
-                         text="Вы уже рейтинговали ответы в этом вопросе",
+                         text="Вы уже оценивали ответы в этом опросе",
                          reply_markup={'hide_keyboard': True})
         end_poll_processor(user, bot, update, come_from='start_rating_processor')
         return
@@ -378,7 +384,7 @@ def rating_start_processor(user, bot, update):
     all_questions = []
     for answer in other_answers_cursor:
         for q_a in answer['answers']:
-            if q_a['type'] in ['open', 'multiselect'] and q_a['question_text'] != 'Укажите ваше ФИО':
+            if q_a['type'] in ['open', 'multiselect'] and 'ФИО' not in q_a['question_text']:
                 all_questions.append({
                     'answer_id': answer['_id'],
                     'question': q_a['question_text'],
@@ -458,7 +464,10 @@ def rating_processor(user, bot, update):
         user['state'] = 'on_poll_end'
         user = users_repo.update(user)
         bot.send_message(chat_id=update.message.chat_id,
-                         text="Спасибо за участие в оценке ответов!",
+                         text="Спасибо за участие в оценке ответов!\n\nПриглашаем стать участником"
+                              " сообщества по обсуждению вопросов регулирования"
+                              " технологий блокчейн, криптовалют и ICO:\n\n"
+                              "https://t.me/InnoExpert",
                          reply_markup={'hide_keyboard': True})
         end_poll_processor(user, bot, update)
 
