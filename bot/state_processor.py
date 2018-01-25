@@ -19,35 +19,37 @@ QUESTIONS_TO_RATE = 5
 
 
 def initial_contact_requester(user, bot, update):
-    button_list = [
-        KeyboardButton("Поделиться данными профиля", request_contact=True)
-    ]
-    reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
+    #button_list = [
+    #    KeyboardButton("Поделиться данными профиля", request_contact=True)
+    #]
+    #reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
     user['state'] = 'not_approved'
     user = users_repo.update(user)
-    bot.send_message(chat_id=update.message.chat_id,
-                     text="Для начала работы, пожалуйста, предоставьте данные профиля",
-                     reply_markup=reply_markup)
+    #bot.send_message(chat_id=update.message.chat_id,
+    #                 text="Для начала работы, пожалуйста, предоставьте данные профиля",
+    #                 reply_markup=reply_markup)
+    contacts_processor(user, bot, update)
 
 
 def contacts_processor(user, bot, update):
-    phone = update.message.contact.phone_number
-    first_name = update.message.contact.first_name
-    last_name = update.message.contact.last_name
+    #phone = update.message.contact.phone_number
+    #first_name = update.message.contact.first_name
+    #last_name = update.message.contact.last_name
     username = update.message.from_user.username
+    phone = update.message.chat_id
     bot.send_message(chat_id=update.message.chat_id, text="Секундочку, дождитесь регистрации в нашей системе",
                      reply_markup={'hide_keyboard': True})
     eth_account = get_ethereum_wallet(phone)
     user['phone'] = phone
-    user['first_name'] = first_name
-    user['last_name'] = last_name
+    #user['first_name'] = first_name
+    #user['last_name'] = last_name
     user['username'] = username
     user['ethereum_wallet'] = eth_account[0]
     user['ethereum_password'] = eth_account[1]
     user['ratings'] = []
     user['state'] = 'on_polls_main_menu'
     user = users_repo.update(user)
-    bot.send_message(chat_id=update.message.chat_id, text="Поздравляем, " + first_name + ' ' + last_name
+    bot.send_message(chat_id=update.message.chat_id, text="Поздравляем, " + username
                                                           + ", Вы зарегистрированы как эксперт")
     main_menu_processor(user, bot, update)
 
