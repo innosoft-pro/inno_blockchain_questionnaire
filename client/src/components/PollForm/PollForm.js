@@ -203,7 +203,7 @@ export default decl({
                     message: "Please input welcome message!"
                   }
                 ]
-              })(<Input required={true} placeholder="Greeting message"/>)}
+              })(<Input required={true} rows={4} placeholder="Greeting message"/>)}
             </FormItem>
             <FormItem label="Participants" {...formItemLayout}>
               {getFieldDecorator("participants", {})(<Select mode="tags" placeholder="Participants"/>)}
