@@ -156,13 +156,12 @@ def get_poll_results(poll_id):
         for answer in record['answers']:
             if answer['type'] in ['select', 'multiselect']:
                 if not result['answers'].get(answer['question_text']):
-
                     result['answers'][answer['question_text']] = {
                         'type': answer['type'],
                         'answers':
                             {answer['answer']: 1}
                     }
-                elif not result['answers'][answer['question_text']].get(answer['answer']):
+                elif not result['answers'][answer['question_text']]['answers'].get(answer['answer']):
                     result['answers'][answer['question_text']]['answers'][answer['answer']] = 1
                 else:
                     result['answers'][answer['question_text']]['answers'][answer['answer']] += 1
