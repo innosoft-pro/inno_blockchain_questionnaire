@@ -1,5 +1,5 @@
 telegram
-requests==2.13.0
+requests
 python-telegram-bot
-pymongo==3.4.0
+pymongo
 web3

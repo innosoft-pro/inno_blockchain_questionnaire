@@ -25,7 +25,7 @@ services:
       - "30303:30303/udp"
 
   mongo:
-    image: mongo:latest
+    image: mongo
     restart: always
     volumes:
       - "mongo-data:/data/db"
