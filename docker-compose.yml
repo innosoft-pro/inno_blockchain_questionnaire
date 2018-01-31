@@ -3,22 +3,20 @@ version: "3"
 services:
   srv:
     build: ./srv
-    #image: innoquiz_srv
     restart: always
     ports:
       - "5002:5002"
 
   bot:
     build: ./bot
-    #image: innoquiz_bot
     restart: always
     ports:
       - "5001:5001"
 
   parity:
-    image: parity/parity:v1.8.6
+    image: parity/parity:stable
     restart: always
-    command: --jsonrpc-apis 'eth,web3,personal' --chain kovan --ui-interface all --auto-update=all --max-peers 10 --max-pending-peers 32 --min-peers 5 --allow-ips public --no-discovery --jsonrpc-cors * --ws-origins all --jsonrpc-hosts all --jsonrpc-interface all --ws-interface all ui --base-path /mnt
+    command: --mode active --tracing off --pruning fast --db-compaction hdd --cache-size 1024 --jsonrpc-apis 'eth,web3,personal' --chain kovan --ui-interface all --auto-update=all --max-peers 40 --max-pending-peers 40 --min-peers 40 --allow-ips public --no-discovery --jsonrpc-cors * --ws-origins all --jsonrpc-hosts all --jsonrpc-interface all --ws-interface all ui --base-path /mnt
     volumes:
       - "~/Library/Application\ Support/io.parity.ethereum/:/mnt"
     ports:
