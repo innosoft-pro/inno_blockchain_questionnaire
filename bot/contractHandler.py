@@ -9,7 +9,7 @@ import base64
 class ContractHandler:
     def __init__(self):
         # Load contract configuration
-        self.web3 = Web3(RPCProvider(host='parity', port='8545'))
+        self.web3 = Web3(HTTPProvider('http://parity:8545'))
         dir_path = path.dirname(path.realpath(__file__))
         with open(str(path.join(dir_path, 'configuration.txt')), 'r') as configuration:
             for line in configuration:
