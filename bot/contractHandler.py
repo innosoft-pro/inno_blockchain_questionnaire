@@ -1,5 +1,5 @@
 from time import sleep
-from web3 import Web3, HTTPProvider, RPCProvider
+from web3 import Web3, HTTPProvider
 from os import path
 import requests
 import json
