@@ -13,11 +13,11 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 # fairshare_bot
-#updater = Updater(token='490479797:AAE6Ee5UNWLqxcTCwdrQOjg9uZ0X99RhMYA')
+updater = Updater(token='490479797:AAE6Ee5UNWLqxcTCwdrQOjg9uZ0X99RhMYA')
 # innopros_bot
 #updater = Updater(token='518209253:AAGzjWt3snyFHL7KYO_pXvffjsgGiiBaTt8')
 # Dev bot
-updater = Updater(token='469106347:AAFl2xQoSW_phGI6gF7wrHvon0maYXYIBBY')
+#updater = Updater(token='469106347:AAFl2xQoSW_phGI6gF7wrHvon0maYXYIBBY')
 # Real bot
 #updater = Updater(token='475545145:AAHtSa3WTcR0je3rQK76kS_wlrYsOiWBKas')
 dispatcher = updater.dispatcher
