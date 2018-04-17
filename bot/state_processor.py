@@ -37,7 +37,8 @@ def contacts_processor(user, bot, update):
     #last_name = update.message.contact.last_name
     username = update.message.from_user.username
     phone = update.message.chat_id
-    bot.send_message(chat_id=update.message.chat_id, text="Секундочку, дождитесь регистрации в нашей системе",
+    bot.send_message(chat_id=update.message.chat_id,
+                     text="Секундочку, дождитесь регистрации в нашей системе",
                      reply_markup={'hide_keyboard': True})
     eth_account = get_ethereum_wallet(phone)
     user['phone'] = phone
@@ -48,9 +49,12 @@ def contacts_processor(user, bot, update):
     user['ethereum_password'] = eth_account[1]
     user['ratings'] = []
     user['state'] = 'on_polls_main_menu'
+    user['current_questions_answers'] = []
+    user['questions'] = []
+    user['sum'] = 0
     user = users_repo.update(user)
-    bot.send_message(chat_id=update.message.chat_id, text="Поздравляем, " + username
-                                                          + ", Вы зарегистрированы как эксперт")
+    bot.send_message(chat_id=update.message.chat_id,
+                     text="Поздравляем, " + username + ", Вы зарегистрированы в системе Компас")
     main_menu_processor(user, bot, update)
 
 
@@ -87,6 +91,13 @@ def active_polls_menu_processor(user, bot, update):
             user = users_repo.update(user)
             end_poll_processor(user, bot, update)
         else:
+            if poll.get('type') and poll['type'] == 'kompas':
+                for participant in poll['participants']:
+                    user['questions'].append(str(participant))
+                    options_list = ['0%', '10%', '20%', '30%', '40%', '50%',
+                                    '60%', '70%', '80%', '90%', '100%']
+                    user['questions'].append(options_list)
+                user['sum'] = 0
             user['state'] = 'on_poll_start'
             user['current_poll'] = str(poll['_id'])
             user['current_questions_answers'] = []
@@ -102,7 +113,8 @@ def active_polls_menu_processor(user, bot, update):
         button_list = []
         active_polls = polls_repo.get_cursor({'archived': False})
         for poll in active_polls:
-            if (not poll['participants']) or (poll['participants'] and user['username'] in poll['participants']):
+            if (not poll['participants']) \
+                    or (poll['participants'] and user['username'] in poll['participants']):
                 button_list.append(KeyboardButton(poll['name']))
         button_list.append(KeyboardButton('Вернуться в главное меню'))
 
@@ -150,7 +162,6 @@ def archive_poll_menu_processor(user, bot, update):
 
 def poll_start_processor(user, bot, update):
     poll = polls_repo.find_one({'_id': ObjectId(user['current_poll'])})
-    question = poll['questions'][0]
     if poll.get('welcome_message'):
         bot.send_message(chat_id=update.message.chat_id,
                          text=poll['welcome_message'],
@@ -158,21 +169,97 @@ def poll_start_processor(user, bot, update):
     bot.send_message(chat_id=update.message.chat_id,
                      text='Сейчас вам будут задаваться вопросы.',
                      reply_markup={'hide_keyboard': True})
-    user['state'] = 'on_poll'
-    user = users_repo.update(user)
-    if question['type'] == 'open':
+    if poll.get('type') and poll['type'] == 'kompas':
+        user['state'] = 'on_bounty'
+        question = user['questions'][0] +\
+                   ": напиши, за какие заслуги, ты премируешь его за прошедшую неделю"
         bot.send_message(chat_id=update.message.chat_id,
-                         text=question['text'],
+                         text=question,
                          reply_markup={'hide_keyboard': True})
-    elif question['type'] in ['select', 'multiselect']:
-        button_list = []
-        for option in question['options']:
-            button_list.append(KeyboardButton(option))
-        reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
-        bot.send_message(chat_id=update.message.chat_id,
-                         text=question['text'],
-                         reply_markup=reply_markup)
+    else:
+        user['state'] = 'on_poll'
+        question = poll['questions'][0]
+        if question['type'] == 'open':
+            bot.send_message(chat_id=update.message.chat_id,
+                             text=question['text'],
+                             reply_markup={'hide_keyboard': True})
+        elif question['type'] in ['select', 'multiselect']:
+            button_list = []
+            for option in question['options']:
+                button_list.append(KeyboardButton(option))
+            reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
+            bot.send_message(chat_id=update.message.chat_id,
+                             text=question['text'],
+                             reply_markup=reply_markup)
+    user = users_repo.update(user)
 
+
+def bounty_processor(user, bot, update):
+    poll = polls_repo.find_one({'_id': ObjectId(user['current_poll'])})
+    question_n = len(user['current_questions_answers'])
+    current_question = user['questions'][question_n]
+    if (question_n % 2) == 0:
+        user['current_questions_answers'].append({
+            'question_text': current_question,
+            'answer': update.message.text
+        })
+        user = users_repo.update(user)
+    else:
+        if update.message.text in current_question:
+            option = int(''.join(filter(str.isdigit, update.message.text)))
+            user['current_questions_answers'].append({
+                'question_text': user['questions'][question_n-1],
+                'answer': option
+            })
+            user['sum'] += option
+            user = users_repo.update(user)
+        else:
+            bot.send_message(chat_id=update.message.chat_id,
+                             text='Выберите одну из опций',
+                             reply_markup={'hide_keyboard': True})
+
+    if len(user['current_questions_answers']) < len(user['questions']):
+        question = user['questions'][len(user['current_questions_answers'])]
+        question_n = len(user['current_questions_answers'])
+        if (question_n % 2) == 0:
+            bot.send_message(chat_id=update.message.chat_id,
+                             text=question + ": напиши, за какие заслуги, ты премируешь его за прошедшую неделю",
+                             reply_markup={'hide_keyboard': True})
+        else:
+            button_list = []
+            max = int(11 - user['sum'] / 10)
+            for i in range(0, max):
+                button_list.append(KeyboardButton(question[i]))
+            reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=3))
+            bot.send_message(chat_id=update.message.chat_id,
+                             text="А ещё напишите, сколько процентов он получит из твоего персонального премиального фонда",
+                             reply_markup=reply_markup)
+    else:
+        bot.send_message(chat_id=update.message.chat_id,
+                         text='Секундочку, сохраняем результаты в блокчейн Ethereum',
+                         reply_markup={'hide_keyboard': True})
+
+        q_a = [{'q': answer['question_text'], 'a': answer['answer']}
+               for answer in user['current_questions_answers']]
+        transaction_hash = save_answers(user['ethereum_wallet'], user['ethereum_password'], q_a)
+
+        answers_repo.insert({
+            'poll_id': str(poll['_id']),
+            'user_id': str(user['_id']),
+            'answers': user['current_questions_answers'],
+            'hash': transaction_hash
+        })
+
+        user['state'] = 'on_poll_end'
+        user['current_questions_answers'] = []
+        user['questions'] = []
+        user['sum'] = 0
+        user = users_repo.update(user)
+        bot.send_message(chat_id=update.message.chat_id,
+                         text='Ссылка на хэш транзакции в сети: ' + transaction_hash,
+                         reply_markup={'hide_keyboard': True})
+        end_poll_processor(user, bot, update, come_from='poll_processor')
+    pass
 
 def poll_processor(user, bot, update):
     poll = polls_repo.find_one({'_id': ObjectId(user['current_poll'])})
@@ -258,7 +345,8 @@ def poll_processor(user, bot, update):
                          text='Секундочку, сохраняем результаты в блокчейн Ethereum',
                          reply_markup={'hide_keyboard': True})
 
-        q_a = [{'q': answer['question_text'], 'a': answer['answer']} for answer in user['current_questions_answers']]
+        q_a = [{'q': answer['question_text'], 'a': answer['answer']}
+               for answer in user['current_questions_answers']]
         transaction_hash = save_answers(user['ethereum_wallet'], user['ethereum_password'], q_a)
 
         answers_repo.insert({
@@ -282,7 +370,6 @@ def end_poll_processor(user, bot, update, come_from=None):
     if come_from and come_from == 'start_rating_processor':
         button_list = [
             KeyboardButton("Показать мои ответы"),
-            KeyboardButton("Оценить ответы других участников"),
             KeyboardButton("Вернуться в главное меню")
         ]
         reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
@@ -292,24 +379,18 @@ def end_poll_processor(user, bot, update, come_from=None):
     elif come_from and come_from == 'poll_processor':
         button_list = [
             KeyboardButton("Показать мои ответы"),
-            KeyboardButton("Оценить ответы других участников"),
             KeyboardButton("Вернуться в главное меню")
         ]
         reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
         bot.send_message(chat_id=update.message.chat_id,
-                         text="Опрос пройден успешно! Сейчас вам будут предложены в случайном порядке"
-                              " ответы других участников опроса. Просим вас оценить их ('+1' - согласен;"
-                              " '-1' - не согласен).",
+                         text="Опрос пройден успешно!",
                          reply_markup=reply_markup)
-        user['state'] = 'on_rating_start'
-        user = users_repo.update(user)
-        rating_start_processor(user, bot, update)
     elif update.message.text == 'Показать мои ответы':
         answers_record = answers_repo.find_one({'poll_id': str(user['current_poll']), 'user_id': str(user['_id'])})
         message = 'Хэш транзакции: ' + answers_record['hash'] + '\n'
         for answer in answers_record['answers']:
             message += 'Вопрос: ' + answer['question_text'] + '\n'
-            message += 'Ответ: ' + answer['answer'] + '\n'
+            message += 'Ответ: ' + str(answer['answer']) + '\n'
 
         bot.send_message(chat_id=update.message.chat_id,
                          text=message)
@@ -326,7 +407,6 @@ def end_poll_processor(user, bot, update, come_from=None):
     elif poll:
         button_list = [
             KeyboardButton("Показать мои ответы"),
-            KeyboardButton("Оценить ответы других участников"),
             KeyboardButton("Вернуться в главное меню")
         ]
         reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))
@@ -336,7 +416,6 @@ def end_poll_processor(user, bot, update, come_from=None):
     else:
         button_list = [
             KeyboardButton("Показать мои ответы"),
-            KeyboardButton("Оценить ответы других участников"),
             KeyboardButton("Вернуться в главное меню")
         ]
         reply_markup = ReplyKeyboardMarkup(utils.build_menu(button_list, n_cols=1))

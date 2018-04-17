@@ -12,10 +12,12 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# fairshare_bot
+#updater = Updater(token='490479797:AAE6Ee5UNWLqxcTCwdrQOjg9uZ0X99RhMYA')
 # innopros_bot
-updater = Updater(token='518209253:AAGzjWt3snyFHL7KYO_pXvffjsgGiiBaTt8')
+#updater = Updater(token='518209253:AAGzjWt3snyFHL7KYO_pXvffjsgGiiBaTt8')
 # Dev bot
-#updater = Updater(token='469106347:AAFl2xQoSW_phGI6gF7wrHvon0maYXYIBBY')
+updater = Updater(token='469106347:AAFl2xQoSW_phGI6gF7wrHvon0maYXYIBBY')
 # Real bot
 #updater = Updater(token='475545145:AAHtSa3WTcR0je3rQK76kS_wlrYsOiWBKas')
 dispatcher = updater.dispatcher
@@ -37,6 +39,8 @@ def start(bot, update):
         user['state'] = 'on_polls_main_menu'
         user['current_poll'] = None
         user['current_questions_answers'] = []
+        user['questions'] = []
+        user['sum'] = 0
         user = users_repo.update(user)
 
     all_states_handler(user, bot, update)
@@ -53,7 +57,8 @@ STATES = [
     'on_archive_poll',
     'on_poll_end',
     'on_rating_start',
-    'on_rating'
+    'on_rating',
+    'on_bounty'
 ]
 
 
@@ -94,6 +99,9 @@ def all_states_handler(user, bot, update):
     elif user['state'] == 'on_rating':
         state_processor.rating_processor(user, bot, update)
 
+    elif user['state'] == 'on_bounty':
+        state_processor.bounty_processor(user, bot, update)
+
 
 def receive_contact(bot, update):
     user = users_repo.find_one({'telegram_id': update.message.chat_id})
@@ -111,10 +119,9 @@ def handle_message(bot, update):
 
 
 contact_handler = MessageHandler(Filters.contact, receive_contact)
+text_msg_handler = MessageHandler(Filters.text, handle_message, pass_job_queue=True)
+start_handler = CommandHandler('start', start, pass_job_queue=True)
 
-text_msg_handler = MessageHandler(Filters.text, handle_message)
-
-start_handler = CommandHandler('start', start)
 dispatcher.add_handler(start_handler)
 dispatcher.add_handler(contact_handler)
 dispatcher.add_handler(text_msg_handler)
